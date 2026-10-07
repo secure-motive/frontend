@@ -21,7 +21,11 @@ export default function ServiceDetail() {
       <Container className="grid items-start gap-12 pt-14 pb-14 md:pt-25 md:pb-16 lg:grid-cols-3">
         <div className="flex flex-col gap-12 lg:col-span-2">
           {domain.intro && (
-            <p className="text-lg leading-relaxed text-cyber-muted">{domain.intro}</p>
+            <div className="flex flex-col gap-4 text-lg leading-relaxed text-cyber-muted">
+              {domain.intro.split('\n\n').map((paragraph, idx) => (
+                <p key={idx}>{paragraph}</p>
+              ))}
+            </div>
           )}
           {domain.items.map((item) => (
             <ServiceItemSection key={item.slug} item={item} />
