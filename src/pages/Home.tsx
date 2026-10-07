@@ -11,6 +11,7 @@ export default function Home() {
   return (
     <PageContainer flush>
       <Hero />
+      <TechnicalTicker items={tickers.homeCompliance} tone="teal" />
       <ComplianceSection />
       <TechnicalTicker items={tickers.homeCapabilities} />
       <DeliverablesSection />

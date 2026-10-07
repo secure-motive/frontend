@@ -1,6 +1,6 @@
 import { cn } from '@/utils/helpers'
 
-type TickerTone = 'orange' | 'grey'
+type TickerTone = 'orange' | 'grey' | 'teal'
 
 interface TechnicalTickerProps {
   /** One loop of terms. The component repeats them to fill the strip. */
@@ -21,6 +21,12 @@ const TONES: Record<TickerTone, { strip: string; term: string; separator: string
     term: 'text-cyber-muted/70',
     separator: 'text-cyber-muted/25',
     glyph: '·',
+  },
+  teal: {
+    strip: 'border-cyber-teal/20 bg-cyber-teal/[0.04]',
+    term: 'text-cyber-teal',
+    separator: 'text-cyber-teal/40',
+    glyph: '◈',
   },
 }
 

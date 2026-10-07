@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { heroIntro, heroMedia } from '@/data/home'
 import FrameworkCoverage from './FrameworkCoverage'
 
@@ -5,9 +6,25 @@ import FrameworkCoverage from './FrameworkCoverage'
 const GRADIENT_LINE =
   'block bg-linear-to-r/srgb from-cyber-teal via-cyber-orange to-cyber-teal bg-clip-text text-transparent'
 
-/** Still image, with the optional video playing over it. Both are decorative. */
+/** Still image, with the looping video playing over it. Both are decorative. */
 function HeroBackground() {
-  const mediaClasses = 'absolute inset-0 size-full object-cover'
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    video.defaultMuted = true
+    video.muted = true
+    const playPromise = video.play()
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        // Autoplay policy prevented playback until user interaction or low-power mode
+      })
+    }
+  }, [])
+
+  const mediaClasses = 'absolute inset-0 size-full object-cover object-center'
 
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0">
@@ -21,18 +38,24 @@ function HeroBackground() {
       />
       {heroMedia.video && (
         <video
+          ref={videoRef}
           autoPlay
           muted
           loop
           playsInline
+          preload="auto"
           poster={heroMedia.image}
           className={`${mediaClasses} motion-reduce:hidden`}
         >
           <source src={heroMedia.video} type="video/mp4" />
         </video>
       )}
-      <div className="absolute inset-0 bg-cyber-bg/65" />
-      <div className="absolute inset-0 bg-linear-to-b from-cyber-bg/50 via-transparent to-cyber-bg" />
+      {/* Base wash for atmospheric contrast */}
+      <div className="absolute inset-0 bg-cyber-bg/55" />
+      {/* Radial vignette focused behind headline and chips */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_75%_65%_at_50%_45%,rgba(18,18,18,0.65)_0%,rgba(18,18,18,0.2)_65%,transparent_100%)]" />
+      {/* Seamless linear fades: top under navbar, bottom into the next section */}
+      <div className="absolute inset-0 bg-linear-to-b from-cyber-bg/70 via-transparent to-cyber-bg" />
     </div>
   )
 }

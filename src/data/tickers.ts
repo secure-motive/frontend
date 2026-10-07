@@ -3,6 +3,19 @@
  * Each list is one loop of the marquee; the component repeats it to scroll.
  */
 export const tickers = {
+  homeCompliance: [
+    'IEC 62443',
+    'UNECE R156',
+    'ISO 24089',
+    'AIS 190',
+    'ISO 24882',
+    'REG. 2024/2847',
+    'CYBER RESILIENCE ACT',
+    'UNECE R155',
+    'ISO 21434',
+    'AIS 189',
+    'TISAX',
+  ],
   homeCapabilities: [
     'THREAT ANALYSIS',
     'PENETRATION TESTING',
@@ -58,13 +71,15 @@ export const tickers = {
     'MEANINGFUL WORK',
   ],
   companyValues: [
-    'TECHNICAL INTEGRITY',
-    'DOMAIN DEPTH',
-    'CLIENT PARTNERSHIP',
-    'TRANSPARENCY',
-    'PRECISION ENGINEERING',
-    'REGULATORY EXPERTISE',
-    'SECURITY FIRST',
+    'CYBER-PHYSICAL SECURITY',
+    'EMBEDDED HARDWARE-FIRST DNA',
+    'CROSS-INDUSTRY SYNERGIES',
+    'TURNKEY REGULATORY ALIGNMENT',
+    'ZERO-DOWNTIME OT FOCUS',
+    'CHIP-TO-CLOUD PROTECTION',
+    'UN R155 & R156 COMPLIANCE',
+    'ISO/SAE 21434 ALIGNED',
+    'MISSION-CRITICAL OT DEFENSE',
   ],
   companyMilestones: [
     '2019',

@@ -11,6 +11,7 @@ export const heroMedia: HeroMedia = {
   image: '/images/home/hero-vehicle.jpg',
   width: 1024,
   height: 468,
+  video: '/gifs/home.mp4',
 }
 
 export const heroIntro =

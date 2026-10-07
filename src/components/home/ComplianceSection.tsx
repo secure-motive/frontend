@@ -43,8 +43,7 @@ function CoverageCard({ title, description, tone = 'teal', tag }: CoverageCardPr
 /** "Compliance & Framework": one card per regulation, then the sector card. */
 export default function ComplianceSection() {
   return (
-    // The top padding includes the empty 37px band the design leaves under every hero.
-    <Container className="pt-20 pb-16 md:pt-33 md:pb-24">
+    <Container className="pt-14 pb-16 md:pt-24 md:pb-24">
       <SectionHeading
         size="lg"
         label="Regulatory coverage"

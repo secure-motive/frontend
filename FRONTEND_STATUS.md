@@ -159,7 +159,7 @@ each before launch — in particular the contact details and the open positions.
 
 | Asset | Status |
 | --- | --- |
-| Hero video `Car.mp4` | Not supplied. The hero is ready for it: set `heroMedia.video` in `src/data/home.ts`. |
+| Hero video `home.mp4` | Supplied and integrated (`public/gifs/home.mp4` / `heroMedia.video`). Plays on loop in the background with poster fallback and reduced-motion support. |
 | Hero image | `public/images/home/hero-vehicle.jpg` is the design's own 1024 × 468 export. A larger original would look sharper on wide screens. |
 | Favicon / app icons | Temporary: the shield mark as an SVG favicon. No PNG or Apple touch icons. |
 | Social share image (Open Graph) | None. No Open Graph or Twitter tags are set. |
