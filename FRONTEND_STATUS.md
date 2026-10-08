@@ -41,6 +41,15 @@ present on this machine, and this repository contains no backend or admin code.
 | Terms of Service | `/terms-of-service` | **Not designed** | Page exists; text is a **placeholder** (§6). |
 | Security Disclosure | `/security-disclosure` | **Not designed** | Shows the Contact page's disclosure card — the only disclosure copy in the design. No policy text. |
 | Not found | any other URL, unknown service or article slug | **Not designed** | Built. |
+| Admin — Login | `/admin/login` | Phase 1 Admin Spec | Built. Mock credentials, session persistence, show/hide password, error handling. |
+| Admin — Dashboard | `/admin` | Phase 1 Admin Spec | Built. Live stat cards, recent applications & messages tables, quick navigation shortcuts. |
+| Admin — Applications | `/admin/applications` | Phase 1 Admin Spec | Built. Search, filter by status, sort, mock resume download feedback. |
+| Admin — Application Detail | `/admin/applications/:id` | Phase 1 Admin Spec | Built. Candidate profile, cover note, status workflow, mock S3 download feedback. |
+| Admin — Contact Messages | `/admin/messages` | Phase 1 Admin Spec | Built. Search, filter by read status, sort, direct email reply shortcut. |
+| Admin — Message Detail | `/admin/messages/:id` | Phase 1 Admin Spec | Built. Message body, sender metadata, auto-mark as read on open. |
+| Admin — Videos | `/admin/videos` | Phase 1 Admin Spec | Built. Full CRUD mock management, inline publish/draft toggling, delete confirmation modal. |
+| Admin — Video New | `/admin/videos/new` | Phase 1 Admin Spec | Built. Form validation, YouTube link detection, live thumbnail preview, client-side persistence. |
+| Admin — Video Edit | `/admin/videos/:id/edit` | Phase 1 Admin Spec | Built. Pre-filled metadata, live thumbnail updates, publication toggle. |
 
 Also derived rather than designed: the mobile menu, the Services dropdown, every layout
 below 1280px, and every form state (errors, sending, result messages).
@@ -85,6 +94,15 @@ contain it and the URL shows the Not Found page).
 /company                           Company
 /contact                           Contact
 /privacy-policy  /terms-of-service  /security-disclosure
+/admin/login                       Admin Login
+/admin                             Admin Dashboard
+/admin/applications                Career Applications List
+/admin/applications/:id            Career Application Detail
+/admin/messages                    Contact Messages List
+/admin/messages/:id                Contact Message Detail
+/admin/videos                      Videos CRUD List
+/admin/videos/new                  Add Video
+/admin/videos/:id/edit             Edit Video
 *                                  Not found
 ```
 

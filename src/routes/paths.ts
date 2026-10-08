@@ -14,8 +14,24 @@ export const ROUTES = {
   privacyPolicy: '/privacy-policy',
   termsOfService: '/terms-of-service',
   securityDisclosure: '/security-disclosure',
+  // Admin Portal (Phase 1 Mock)
+  admin: '/admin',
+  adminLogin: '/admin/login',
+  adminApplications: '/admin/applications',
+  adminApplicationDetail: '/admin/applications/:id',
+  adminMessages: '/admin/messages',
+  adminMessageDetail: '/admin/messages/:id',
+  adminVideos: '/admin/videos',
+  adminVideoNew: '/admin/videos/new',
+  adminVideoEdit: '/admin/videos/:id/edit',
 } as const
 
 export const serviceDetailPath = (serviceSlug: string) => `/services/${serviceSlug}`
 
 export const articleDetailPath = (slug: string) => `/knowledge-centre/articles/${slug}`
+
+export const adminApplicationDetailPath = (id: string) => `/admin/applications/${id}`
+
+export const adminMessageDetailPath = (id: string) => `/admin/messages/${id}`
+
+export const adminVideoEditPath = (id: string) => `/admin/videos/${id}/edit`

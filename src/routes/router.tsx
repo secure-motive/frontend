@@ -1,6 +1,9 @@
 import type { ComponentType } from 'react'
 import { createBrowserRouter } from 'react-router'
 import RootLayout from '@/components/layout/RootLayout'
+import AdminRootWrapper from '@/admin/layout/AdminRootWrapper'
+import AdminProtectedRoute from '@/admin/auth/AdminProtectedRoute'
+import AdminLayout from '@/admin/layout/AdminLayout'
 import { ROUTES } from './paths'
 
 /** Code-splits a page: each route loads its own chunk on first visit. */
@@ -9,6 +12,33 @@ const page = (load: () => Promise<{ default: ComponentType }>) => async () => ({
 })
 
 export const router = createBrowserRouter([
+  // Admin Portal (Phase 1 Mock)
+  {
+    path: '/admin',
+    element: <AdminRootWrapper />,
+    children: [
+      { path: 'login', lazy: page(() => import('@/admin/pages/AdminLogin')) },
+      {
+        element: <AdminProtectedRoute />,
+        children: [
+          {
+            element: <AdminLayout />,
+            children: [
+              { index: true, lazy: page(() => import('@/admin/pages/AdminDashboard')) },
+              { path: 'applications', lazy: page(() => import('@/admin/pages/AdminApplications')) },
+              { path: 'applications/:id', lazy: page(() => import('@/admin/pages/AdminApplicationDetail')) },
+              { path: 'messages', lazy: page(() => import('@/admin/pages/AdminMessages')) },
+              { path: 'messages/:id', lazy: page(() => import('@/admin/pages/AdminMessageDetail')) },
+              { path: 'videos', lazy: page(() => import('@/admin/pages/AdminVideos')) },
+              { path: 'videos/new', lazy: page(() => import('@/admin/pages/AdminVideoNew')) },
+              { path: 'videos/:id/edit', lazy: page(() => import('@/admin/pages/AdminVideoEdit')) },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  // Public Website
   {
     element: <RootLayout />,
     // Pages are lazy, so the first paint waits for one chunk; show the bare

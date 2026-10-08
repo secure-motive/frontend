@@ -11,6 +11,8 @@ export function submitCareerApplication({
 }: CareerApplication): Promise<SubmissionResult> {
   return submitOrPreview(() => {
     const body = new FormData()
+    const fullName = `${fields.firstName} ${fields.lastName}`.trim()
+    body.append('fullName', fullName)
     for (const [name, value] of Object.entries(fields)) body.append(name, value)
     body.append('resume', resume)
     return apiRequest<void>(API_ENDPOINTS.careerApplications, { method: 'POST', body })

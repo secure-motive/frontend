@@ -35,8 +35,8 @@ function hasWebLink(item: ApiVideo): boolean {
   return typeof item.youtubeUrl === 'string' && /^https?:\/\//i.test(item.youtubeUrl)
 }
 
-/** Loads the published videos from the public endpoint. Never calls admin routes. */
 export async function fetchPublishedVideos(signal?: AbortSignal): Promise<Video[]> {
-  const items = await apiRequest<ApiVideo[]>(API_ENDPOINTS.videos, { signal })
+  const response = await apiRequest<{ success: boolean; data: ApiVideo[] } | ApiVideo[]>(API_ENDPOINTS.videos, { signal })
+  const items = Array.isArray(response) ? response : response?.data ?? []
   return items.filter((item) => item.published !== false && hasWebLink(item)).map(toVideo)
 }
