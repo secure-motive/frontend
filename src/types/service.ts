@@ -34,6 +34,7 @@ export interface ServiceItem {
 /** One of the five service domains. Each has its own page at /services/:slug. */
 export interface ServiceDomain {
   slug: string
+  slugAliases?: string[]
   /** Two-digit position, e.g. "01". */
   index: string
   /** Uppercase mono tag, e.g. "AUTOMOTIVE". */

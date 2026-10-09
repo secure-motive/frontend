@@ -11,8 +11,7 @@ import { NAV_LABEL_CLASSES, navItemColors } from './navStyles'
  * "Services" item of the desktop navigation.
  *
  * The label links to the Services page; the chevron (and hovering the item)
- * opens a menu of the five service domains. The design shows only the closed
- * item, so the panel is composed from existing tokens.
+ * opens a menu of the five service domains.
  */
 export default function ServicesMenu() {
   const [isOpen, setIsOpen] = useState(false)
@@ -68,19 +67,23 @@ export default function ServicesMenu() {
           isOpen ? 'visible opacity-100' : 'invisible opacity-0',
         )}
       >
-        <ul className="rounded-card border border-cyber-teal/15 bg-cyber-surface p-2">
-          {serviceDomains.map((domain) => (
-            <li key={domain.slug}>
-              <Link
-                to={serviceDetailPath(domain.slug)}
-                onClick={() => setIsOpen(false)}
-                className="block rounded-lg px-4 py-2 text-sm whitespace-nowrap text-cyber-muted transition-colors hover:bg-cyber-teal/8 hover:text-cyber-teal"
-              >
-                {domain.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="w-72 overflow-hidden rounded-2xl border border-white/10 bg-[#16181b] shadow-2xl backdrop-blur-md">
+          {/* Top gradient border accent (teal to orange) matching the design */}
+          <div className="h-[2px] w-full bg-gradient-to-r from-cyber-teal to-cyber-orange" />
+          <ul className="flex flex-col gap-1 p-2.5">
+            {serviceDomains.map((domain) => (
+              <li key={domain.slug}>
+                <Link
+                  to={serviceDetailPath(domain.slug)}
+                  onClick={() => setIsOpen(false)}
+                  className="block rounded-xl px-4 py-2.5 text-sm leading-snug text-white/80 transition-colors hover:bg-white/5 hover:text-cyber-teal"
+                >
+                  {domain.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   )
