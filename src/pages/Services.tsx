@@ -4,6 +4,7 @@ import CtaBand from '@/components/common/CtaBand'
 import PageHeading from '@/components/common/PageHeading'
 import TechnicalTicker from '@/components/common/TechnicalTicker'
 import PageContainer from '@/components/layout/PageContainer'
+import ServiceHeroBackground from '@/components/services/ServiceHeroBackground'
 import ServiceRow from '@/components/services/ServiceRow'
 import { serviceDomains } from '@/data/services'
 import { tickers } from '@/data/tickers'
@@ -14,7 +15,12 @@ export default function Services() {
     <PageContainer title="Services">
       {/* The design's intro describes the earlier practice-area list, so it is
           left out until copy for the five domains is supplied. */}
-      <PageHeading label="Capabilities matrix" title="Our" highlight="Services" />
+      <PageHeading
+        label="Capabilities matrix"
+        title="Our"
+        highlight="Services"
+        background={<ServiceHeroBackground videoSrc="/gifs/home.mp4" />}
+      />
 
       {/* The top padding includes the empty 37px band the design leaves under every hero. */}
       <Container className="pt-16 pb-14 md:pt-29 md:pb-20">

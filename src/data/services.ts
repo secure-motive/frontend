@@ -10,16 +10,17 @@ import type { ServiceDomain } from '@/types/service'
 export const serviceDomains: ServiceDomain[] = [
   {
     slug: 'automotive',
-    slugAliases: ['cybersecurity-consulting'],
+    slugAliases: ['cybersecurity-consulting', 'automotive-cybersecurity-solutions', 'automotive-solutions', 'automotive-cybersecurity'],
     index: '01',
-    label: 'STRATEGY',
-    name: 'Automotive Cybersecurity Consulting',
+    label: 'AUTOMOTIVE',
+    name: 'Automotive Cybersecurity Solutions',
     accent: 'teal',
     tagline: 'Building the Cybersecurity Management System your vehicle programs demand.',
     summary:
       'Strategic automotive cybersecurity guidance aligned with UN regulations and ISO standards for OEMs and Tier suppliers.',
     intro:
       'Modern vehicles are complex distributed computing systems interconnected with cloud services, V2X infrastructure, and external diagnostic networks. A reactive security posture is no longer viable. SecureXmotive partners with OEMs, Tier-1 integrators, and Tier-2 component suppliers to establish cybersecurity programs that satisfy regulatory mandates and protect brand reputation from concept to end-of-life.\n\nOur automotive cybersecurity services are designed to support organizations from the earliest stages of vehicle development through production, deployment, monitoring, incident response, and end-of-life. We help organizations establish cybersecurity as an integral part of vehicle engineering rather than treating it as an afterthought.',
+    video: '/gifs/home.mp4',
     standards: ['ISO/SAE 21434', 'UN R155', 'UN R156', 'CSMS', 'TARA', 'SBOM'],
     items: [
       {
@@ -148,17 +149,18 @@ export const serviceDomains: ServiceDomain[] = [
     ],
   },
   {
-    slug: 'compliance-certification',
-    slugAliases: ['agriculture', 'compliance'],
+    slug: 'agricultural-vehicles',
+    slugAliases: ['compliance-certification', 'agriculture', 'agricultural-vehicle-cybersecurity', 'compliance'],
     index: '02',
-    label: 'COMPLIANCE',
-    name: 'Compliance & Certification Support',
+    label: 'AGRICULTURE',
+    name: 'Agricultural Vehicle Cybersecurity',
     accent: 'orange',
-    tagline: 'End-to-end support for CSMS/SUMS type approval, UNECE R155/R156 and ISO 21434 certification.',
+    tagline: 'Securing the technology behind modern agriculture and connected farming.',
     summary:
-      'End-to-end support for CSMS/SUMS type approval, UNECE R155/R156, ISO 21434 certification and audit preparation.',
+      'Specialized cybersecurity consulting for connected agricultural vehicles, smart implements, and precision farming systems.',
     intro:
       'Agricultural machinery is rapidly becoming connected, automated, and software-defined. Modern tractors, combines, sprayers, harvesters, precision-farming systems, and connected implements rely on sophisticated electronics, sensors, wireless connectivity, GNSS, telematics, cloud platforms, and software.\n\nThis digital transformation is creating enormous opportunities for productivity—but it is also creating new cybersecurity risks. secureXmotive provides specialized cybersecurity consulting services to help agricultural vehicle manufacturers, implement manufacturers, technology providers, and connected farming ecosystems.',
+    video: '/gifs/agriculture.mp4',
     standards: ['ISO 24882', 'ISOBUS (ISO 11783)', 'TARA', 'GNSS', 'Telematics'],
     items: [
       {
@@ -293,17 +295,18 @@ export const serviceDomains: ServiceDomain[] = [
     ],
   },
   {
-    slug: 'threat-analysis-tara',
-    slugAliases: ['off-highway', 'tara'],
+    slug: 'off-highway-vehicles',
+    slugAliases: ['threat-analysis-tara', 'off-highway', 'off-highway-vehicle-cybersecurity', 'tara'],
     index: '03',
-    label: 'RISK',
-    name: 'Threat Analysis & Risk Assessment (TARA)',
+    label: 'OFF-HIGHWAY',
+    name: 'Off-Highway Vehicle Cybersecurity',
     accent: 'yellow',
-    tagline: 'Systematic asset identification, threat modeling with STRIDE/EVITA, and risk treatment per ISO 21434.',
+    tagline: 'Securing the machines that build, move, mine, and harvest.',
     summary:
-      'Systematic asset identification, threat modeling with STRIDE/EVITA, and risk treatment per ISO 21434 Section 15.',
+      'Cybersecurity engineering and risk assessment for construction, mining, forestry, and heavy industrial vehicles.',
     intro:
       'Construction, mining, forestry, material handling, and other off-highway industries are undergoing a digital transformation. Excavators, loaders, cranes, forklifts, autonomous machines, and specialized equipment increasingly depend on electronic control systems, sensors, telematics, connectivity, remote diagnostics, automation, and cloud-based fleet platforms.\n\nAs machines become smarter and more connected, their cybersecurity exposure grows. secureXmotive provides specialized cybersecurity consulting services to help off-highway vehicle manufacturers and technology providers protect machines throughout their complete lifecycle.',
+    video: '/gifs/machinery.mp4',
     standards: ['TARA', 'CAN / J1939', 'Industrial Ethernet', 'Telematics', 'Autonomous Systems'],
     items: [
       {
@@ -411,17 +414,18 @@ export const serviceDomains: ServiceDomain[] = [
     ],
   },
   {
-    slug: 'penetration-testing',
-    slugAliases: ['commercial', 'commercial-vehicles'],
+    slug: 'commercial-vehicles',
+    slugAliases: ['penetration-testing', 'commercial', 'commercial-vehicle-cybersecurity'],
     index: '04',
-    label: 'OFFENSIVE',
-    name: 'Penetration Testing & VA',
+    label: 'COMMERCIAL',
+    name: 'Commercial Vehicle Cybersecurity',
     accent: 'red',
-    tagline: 'ECU exploitation, telematics testing, and comprehensive attack surface security testing.',
+    tagline: 'Securing the future of commercial mobility, logistics fleets, and connected transport.',
     summary:
-      'ECU exploitation, telematics interface testing, OBD port probing, and V2X communication security assessment.',
+      'End-to-end cybersecurity solutions for trucks, buses, commercial fleets, and connected logistics ecosystems.',
     intro:
       'Trucks, buses, coaches, delivery vehicles, and other commercial vehicles are rapidly evolving into connected digital platforms. Telematics, fleet management, remote diagnostics, ADAS, infotainment, connected services, electronic control units, and OTA updates are transforming how commercial fleets operate.\n\nBut every new connection introduces another potential cybersecurity risk. secureXmotive helps truck, bus, and commercial vehicle manufacturers protect their vehicles, fleets, infrastructure, and connected services against evolving cyber threats.',
+    video: '/gifs/commercial.mp4',
     standards: ['UN R155', 'UN R156', 'ISO/SAE 21434', 'SAE J1939', 'CSMS'],
     items: [
       {
@@ -529,17 +533,18 @@ export const serviceDomains: ServiceDomain[] = [
     ],
   },
   {
-    slug: 'security-architecture',
-    slugAliases: ['industrial-ot'],
+    slug: 'industrial-control-systems',
+    slugAliases: ['security-architecture', 'industrial-ot', 'industrial-control-systems-cybersecurity', 'ics-cybersecurity'],
     index: '05',
-    label: 'DESIGN',
-    name: 'Security Architecture & Design',
+    label: 'INDUSTRIAL OT',
+    name: 'Industrial Control Systems Cybersecurity',
     accent: 'purple',
-    tagline: 'Secure-by-design architecture, HSM integration, and cryptographic key management frameworks.',
+    tagline: 'Securing the systems that keep industry and operational technology running.',
     summary:
-      'Secure-by-design architecture, HSM integration, OTA update security, and cryptographic key management frameworks.',
+      'Protecting Operational Technology (OT), ICS, SCADA, and industrial plant networks against cyber threats without disrupting operations.',
     intro:
       'Industrial organizations increasingly depend on connected Operational Technology (OT), Industrial Control Systems (ICS), SCADA platforms, PLCs, HMIs, industrial networks, remote-access systems, sensors, and connected machinery.\n\nWhile connectivity improves efficiency and enables digital transformation, it also introduces cybersecurity risks into environments where availability, safety, and operational continuity are critical. secureXmotive provides specialized cybersecurity consulting services for organizations looking to protect their industrial control environments against modern cyber threats.',
+    video: '/gifs/industry.mp4',
     standards: ['IEC 62443', 'SCADA / PLC', 'Purdue Model', 'IT/OT Segmentation', 'Industrial Ethernet'],
     items: [
       {

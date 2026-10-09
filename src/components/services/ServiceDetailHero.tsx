@@ -4,11 +4,12 @@ import Tag from '@/components/common/Tag'
 import TextLink from '@/components/common/TextLink'
 import { ROUTES } from '@/routes/paths'
 import type { ServiceDomain } from '@/types/service'
+import ServiceHeroBackground from './ServiceHeroBackground'
 
 /** Top band of a domain page: back link, tag, title, rule and optional tagline. */
 export default function ServiceDetailHero({ domain }: { domain: ServiceDomain }) {
   return (
-    <HeroBand>
+    <HeroBand background={<ServiceHeroBackground videoSrc={domain.video} />}>
       <TextLink to={ROUTES.services} arrow="left" tone="muted">
         All services
       </TextLink>
