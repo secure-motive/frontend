@@ -1,5 +1,11 @@
-import { API_ENDPOINTS, apiRequest } from './api'
+/**
+ * Admin Contact Message Service
+ *
+ * Migrated to Cloud Firestore (Phase 8).
+ * Interacts directly with the Firestore `contactSubmissions` collection.
+ */
 import type { AdminContactMessage } from '@/admin/types/message'
+import { firestoreMessageService } from './firestoreMessageService'
 
 export interface BackendContactSubmission {
   id: string
@@ -12,79 +18,35 @@ export interface BackendContactSubmission {
   createdAt: string
 }
 
-interface MessagesListResponse {
-  success: boolean
-  data: BackendContactSubmission[]
-  pagination?: {
-    total: number
-    page: number
-    limit: number
-    totalPages: number
-  }
-}
-
-interface MessageDetailResponse {
-  success: boolean
-  message?: string
-  data: BackendContactSubmission
-}
-
-export function mapBackendMessage(item: BackendContactSubmission): AdminContactMessage {
-  return {
-    id: item.id,
-    firstName: item.firstName,
-    lastName: item.lastName,
-    email: item.email,
-    phone: item.phone || 'Not provided',
-    company: item.company || 'Direct Inquiry',
-    service: 'General Inquiries',
-    message: item.message,
-    isRead: false,
-    submittedAt: item.createdAt,
-  }
-}
-
 export const adminMessageService = {
   /**
-   * Fetch all contact submissions from backend.
+   * Fetch all contact submissions from Cloud Firestore.
    */
-  async getMessages(params?: { page?: number; limit?: number }, signal?: AbortSignal): Promise<{
+  async getMessages(params?: { page?: number; limit?: number }, _signal?: AbortSignal): Promise<{
     messages: AdminContactMessage[]
     total: number
   }> {
-    const res = await apiRequest<MessagesListResponse>(API_ENDPOINTS.adminContact, {
-      method: 'GET',
-      params: {
-        page: params?.page ?? 1,
-        limit: params?.limit ?? 100,
-      },
-      signal,
-    })
-
-    const rawList = Array.isArray(res.data) ? res.data : []
-    const messages = rawList.map(mapBackendMessage)
-    const total = res.pagination?.total ?? messages.length
-
-    return { messages, total }
+    return firestoreMessageService.getMessages({ limit: params?.limit ?? 100 })
   },
 
   /**
-   * Fetch a single contact submission by ID from backend.
+   * Fetch a single contact submission by ID from Cloud Firestore.
    */
-  async getMessageById(id: string, signal?: AbortSignal): Promise<AdminContactMessage> {
-    const res = await apiRequest<MessageDetailResponse>(`${API_ENDPOINTS.adminContact}/${id}`, {
-      method: 'GET',
-      signal,
-    })
-    return mapBackendMessage(res.data)
+  async getMessageById(id: string, _signal?: AbortSignal): Promise<AdminContactMessage> {
+    return firestoreMessageService.getMessageById(id)
   },
 
   /**
-   * Delete contact submission by ID.
+   * Mark message as read/unread in Cloud Firestore.
+   */
+  async markMessageAsRead(id: string, isRead = true): Promise<void> {
+    return firestoreMessageService.markMessageAsRead(id, isRead)
+  },
+
+  /**
+   * Delete contact submission from Cloud Firestore.
    */
   async deleteMessage(id: string): Promise<void> {
-    await apiRequest<void>(`${API_ENDPOINTS.adminContact}/${id}`, {
-      method: 'DELETE',
-    })
+    return firestoreMessageService.deleteMessage(id)
   },
 }

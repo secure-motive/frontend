@@ -337,7 +337,7 @@ export default function AdminVideos() {
         {/* Footer info bar */}
         <div className="flex items-center justify-between border-t border-white/5 px-6 py-3 font-code text-2xs text-cyber-muted">
           <span>Showing {filteredVideos.length} of {videos.length} videos</span>
-          <span>PostgreSQL Database Integrated</span>
+          <span>Cloud Firestore Integrated</span>
         </div>
       </div>
 

@@ -12,9 +12,6 @@ interface ResumeUploadProps {
   className?: string
 }
 
-const ACTION_CLASSES =
-  'cursor-pointer font-code text-xs tracking-widest uppercase transition-colors disabled:pointer-events-none'
-
 function formatSize(bytes: number): string {
   return bytes < 1024 * 1024
     ? `${Math.max(1, Math.round(bytes / 1024))} KB`
@@ -22,10 +19,7 @@ function formatSize(bytes: number): string {
 }
 
 /**
- * Resume picker in the style of the form's other fields. The design has a
- * plain "Resume / CV link" input; the client asked for a file upload, so this
- * replaces it: choose or drop a file, see its name, replace or remove it.
- * The file is sent with the rest of the form, not uploaded on its own.
+ * Resume Upload component matching SecureXmotive_Resume_Upload_Form.pdf specifications.
  */
 export default function ResumeUpload({ file, onChange, error, disabled, className }: ResumeUploadProps) {
   const id = useId()
@@ -34,7 +28,6 @@ export default function ResumeUpload({ file, onChange, error, disabled, classNam
 
   const remove = () => {
     onChange(null)
-    // Clear the native input too, so the same file can be picked again.
     if (inputRef.current) inputRef.current.value = ''
   }
 
@@ -46,7 +39,7 @@ export default function ResumeUpload({ file, onChange, error, disabled, classNam
   }
 
   return (
-    <FieldShell id={id} label="Resume / CV" required error={error} className={className}>
+    <FieldShell id={id} label="" required={false} error={error} className={className}>
       <div
         onDragOver={(event) => {
           event.preventDefault()
@@ -55,8 +48,14 @@ export default function ResumeUpload({ file, onChange, error, disabled, classNam
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
         className={cn(
-          'flex min-h-11.75 flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-dashed bg-cyber-field px-4 py-2.5 transition-colors focus-within:border-cyber-teal/60 focus-within:ring-2 focus-within:ring-cyber-teal/20',
-          error ? 'border-cyber-orange' : isDragging ? 'border-cyber-teal/60' : 'border-cyber-teal/20',
+          'relative rounded-xl border-2 border-dashed p-6 sm:p-8 text-center transition-all',
+          error
+            ? 'border-cyber-orange bg-cyber-orange/5'
+            : isDragging
+            ? 'border-cyber-teal bg-cyber-teal/10 shadow-[0_0_20px_rgba(0,229,191,0.15)]'
+            : file
+            ? 'border-cyber-teal/60 bg-cyber-teal/5'
+            : 'border-cyber-teal/30 bg-cyber-field/80 hover:border-cyber-teal/50 hover:bg-cyber-field',
         )}
       >
         <input
@@ -71,31 +70,78 @@ export default function ResumeUpload({ file, onChange, error, disabled, classNam
           aria-describedby={error ? `${id}-error` : undefined}
           className="sr-only"
         />
-        {file ? (
-          <p className="flex min-w-0 flex-1 items-baseline gap-3 text-sm text-cyber-value">
-            <span className="truncate">{file.name}</span>
-            <span className="shrink-0 font-code text-2xs text-cyber-muted">
-              {formatSize(file.size)}
-            </span>
-          </p>
-        ) : (
-          <p className="min-w-0 flex-1 text-sm text-cyber-placeholder/50">
-            PDF, DOC or DOCX, up to 5 MB
-          </p>
-        )}
-        <label htmlFor={id} className={cn(ACTION_CLASSES, 'text-cyber-teal hover:text-white')}>
-          {file ? 'Replace' : 'Choose file'}
-        </label>
-        {file && (
-          <button
-            type="button"
-            onClick={remove}
-            disabled={disabled}
-            className={cn(ACTION_CLASSES, 'text-cyber-muted hover:text-cyber-orange')}
-          >
-            Remove
-          </button>
-        )}
+
+        {/* Upload Box Content */}
+        <div className="space-y-3">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-cyber-teal/10 border border-cyber-teal/20 text-cyber-teal">
+            <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+          </div>
+
+          <div>
+            <h3 className="font-display text-base font-bold tracking-wider text-white uppercase">
+              UPLOAD YOUR RESUME <span className="text-cyber-orange">*</span>
+            </h3>
+            <p className="mt-1 font-body text-xs sm:text-sm text-cyber-muted">
+              Attach your latest resume or CV
+            </p>
+            <p className="mt-1 font-code text-2xs tracking-wider text-cyber-teal">
+              PDF, DOC or DOCX • Maximum 5 MB
+            </p>
+          </div>
+
+          {/* Selected File Display or Selection Controls */}
+          <div className="pt-2">
+            {file ? (
+              <div className="mx-auto max-w-lg rounded-lg border border-cyber-teal/40 bg-cyber-bg/90 p-3 sm:p-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="size-8 rounded bg-cyber-teal/20 text-cyber-teal flex items-center justify-center shrink-0 font-code text-xs font-bold">
+                    {file.name.split('.').pop()?.toUpperCase() || 'FILE'}
+                  </div>
+                  <div className="text-left min-w-0">
+                    <p className="truncate font-code text-xs font-bold text-white">
+                      {file.name}
+                    </p>
+                    <p className="font-code text-2xs text-cyber-muted">
+                      {formatSize(file.size)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <label
+                    htmlFor={id}
+                    className="cursor-pointer rounded border border-white/10 px-2.5 py-1 font-code text-2xs uppercase tracking-wider text-cyber-teal hover:border-cyber-teal hover:bg-cyber-teal/10 transition-colors"
+                  >
+                    Replace
+                  </label>
+                  <button
+                    type="button"
+                    onClick={remove}
+                    disabled={disabled}
+                    className="cursor-pointer rounded border border-white/10 px-2.5 py-1 font-code text-2xs uppercase tracking-wider text-cyber-muted hover:border-red-500/40 hover:text-red-400 transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <label
+                  htmlFor={id}
+                  className="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-cyber-teal px-5 py-2.5 font-code text-xs font-bold uppercase tracking-wider text-cyber-bg hover:bg-cyber-teal/90 transition-colors shadow-md shadow-cyber-teal/10"
+                >
+                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>Select File</span>
+                </label>
+                <span className="font-code text-2xs text-cyber-muted">or drag & drop here</span>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </FieldShell>
   )

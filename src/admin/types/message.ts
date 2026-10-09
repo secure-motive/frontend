@@ -6,6 +6,8 @@ export interface AdminContactMessage {
   phone: string
   company: string
   jobTitle?: string
+  country?: string
+  industry?: string
   service?: string
   message: string
   isRead: boolean

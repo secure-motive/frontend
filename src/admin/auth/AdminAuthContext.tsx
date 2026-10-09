@@ -1,55 +1,25 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react'
+import type { User } from 'firebase/auth'
 import type { AdminUser } from '../types/admin'
-import { adminAuthService } from '@/services/adminAuthService'
-import { setUnauthorizedHandler, ApiError } from '@/services/api'
+import { adminAuthService, getFirebaseErrorMessage } from '@/services/adminAuthService'
 import { AdminAuthContext } from './AdminAuthContextDefinition'
 
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null)
+  const [firebaseUser, setFirebaseUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [sessionExpired, setSessionExpired] = useState<boolean>(false)
 
-  // Verify active session with backend on initial application mount
+  // Listen to Firebase authentication state changes via onAuthStateChanged
   useEffect(() => {
-    let isMounted = true
-
-    const verifySession = async () => {
-      try {
-        const verifiedUser = await adminAuthService.getMe()
-        if (isMounted) {
-          setUser(verifiedUser)
-          setSessionExpired(false)
-        }
-      } catch {
-        if (isMounted) {
-          setUser(null)
-          // Silent failure on initial verification - user simply isn't logged in yet
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false)
-        }
-      }
-    }
-
-    verifySession()
+    const unsubscribe = adminAuthService.onAuthStateChanged((adminUser, fbUser) => {
+      setUser(adminUser)
+      setFirebaseUser(fbUser)
+      setIsLoading(false)
+    })
 
     return () => {
-      isMounted = false
-    }
-  }, [])
-
-  // Handle mid-session 401 unauthorized errors from protected API calls
-  useEffect(() => {
-    const handleUnauthorized = () => {
-      setUser(null)
-      setSessionExpired(true)
-    }
-
-    setUnauthorizedHandler(handleUnauthorized)
-
-    return () => {
-      setUnauthorizedHandler(null)
+      unsubscribe()
     }
   }, [])
 
@@ -58,10 +28,11 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     try {
       const authenticatedUser = await adminAuthService.login(email, pass)
       setUser(authenticatedUser)
+      setFirebaseUser(adminAuthService.getCurrentUser())
       setSessionExpired(false)
       return { success: true }
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : 'Authentication failed. Please verify credentials.'
+      const message = getFirebaseErrorMessage(err)
       return { success: false, error: message }
     } finally {
       setIsLoading(false)
@@ -71,10 +42,11 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     try {
       await adminAuthService.logout()
-    } catch {
-      // Even if network fails, ensure client session is purged
+    } catch (err) {
+      console.error('[Firebase Auth] Logout error:', err)
     } finally {
       setUser(null)
+      setFirebaseUser(null)
       setSessionExpired(false)
     }
   }, [])
@@ -87,6 +59,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     <AdminAuthContext.Provider
       value={{
         user,
+        firebaseUser,
         isAuthenticated: !!user,
         isLoading,
         sessionExpired,

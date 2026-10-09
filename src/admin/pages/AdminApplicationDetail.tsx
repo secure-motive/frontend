@@ -129,12 +129,19 @@ export default function AdminApplicationDetail() {
     }
   }
 
-  const handleStatusChange = (newStatus: ApplicationStatus) => {
-    updateApplicationStatus(application.id, newStatus)
-    setFetchedApp((prev) => (prev ? { ...prev, status: newStatus } : null))
-    showToast(`Status updated to ${newStatus}`, {
-      type: 'success',
-    })
+  const handleStatusChange = async (newStatus: ApplicationStatus) => {
+    try {
+      await updateApplicationStatus(application.id, newStatus)
+      setFetchedApp((prev) => (prev ? { ...prev, status: newStatus } : null))
+      showToast(`Status updated to ${newStatus}`, {
+        type: 'success',
+      })
+    } catch (err) {
+      showToast('Status Update Failed', {
+        detail: err instanceof Error ? err.message : 'Could not update application status in Cloud Firestore.',
+        type: 'error',
+      })
+    }
   }
 
   const handleDeleteApplication = async () => {
@@ -269,10 +276,10 @@ export default function AdminApplicationDetail() {
 
                 <div className="rounded-lg border border-white/5 bg-[#141414] p-4">
                   <p className="font-code text-3xs tracking-widest text-cyber-muted uppercase">
-                    Years of Experience
+                    Current Location
                   </p>
-                  <p className="mt-1.5 font-display text-base font-bold text-cyber-teal">
-                    {application.experience}
+                  <p className="mt-1.5 font-display text-base font-bold text-white">
+                    {application.currentLocation || application.experience || 'Not specified'}
                   </p>
                 </div>
 

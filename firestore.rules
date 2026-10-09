@@ -1,0 +1,87 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: Check if user is the authorized administrator
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.uid == 'C4Y2foGCBme6H1WUCbmUdu5ez1h1'
+      );
+    }
+
+    // Helper: Validate email format
+    function isValidEmail(email) {
+      return email is string && email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    // Helper: Permitted industry categories matching PDF
+    function isValidIndustry(industry) {
+      return industry is string && industry in [
+        'Automotive',
+        'Agricultural Vehicles & Equipment',
+        'Off-highway Vehicles & Equipment',
+        'Trucks & Buses',
+        'Industrial OT / ICS',
+        'Automotive Supplier / Tier 1 / Tier 2',
+        'Other'
+      ];
+    }
+
+    // 1. Contact Submissions Collection
+    match /contactSubmissions/{submissionId} {
+      // Public visitors can submit contact forms with validated payload
+      allow create: if 
+        request.resource.data.fullName is string &&
+        request.resource.data.fullName.size() >= 2 && request.resource.data.fullName.size() <= 200 &&
+        isValidEmail(request.resource.data.email) &&
+        request.resource.data.country is string &&
+        request.resource.data.country.size() >= 2 && request.resource.data.country.size() <= 100 &&
+        isValidIndustry(request.resource.data.industry) &&
+        request.resource.data.message is string &&
+        request.resource.data.message.size() >= 2 && request.resource.data.message.size() <= 10000 &&
+        request.resource.data.consent == true &&
+        request.resource.data.isRead == false &&
+        request.resource.data.read == false;
+
+      // Only authorized admin can read, update, or delete contact submissions
+      allow read, update, delete: if isAdmin();
+    }
+
+    // 2. Career Applications Collection
+    match /applications/{applicationId} {
+      // Public visitors can submit career applications with validated payload
+      allow create: if
+        request.resource.data.fullName is string &&
+        request.resource.data.fullName.size() >= 2 && request.resource.data.fullName.size() <= 200 &&
+        isValidEmail(request.resource.data.email) &&
+        request.resource.data.phone is string &&
+        request.resource.data.phone.size() >= 5 && request.resource.data.phone.size() <= 50 &&
+        request.resource.data.currentLocation is string &&
+        request.resource.data.currentLocation.size() >= 2 && request.resource.data.currentLocation.size() <= 150 &&
+        request.resource.data.status == 'NEW' &&
+        request.resource.data.consent == true &&
+        request.resource.data.resumeFileName is string &&
+        request.resource.data.resumeFileName.size() > 0 && request.resource.data.resumeFileName.size() <= 255 &&
+        request.resource.data.resumeKey is string &&
+        request.resource.data.resumeKey.matches('^resumes/.+') && request.resource.data.resumeKey.size() <= 255;
+
+      // Only authorized admin can read, update, or delete applications
+      allow read, update, delete: if isAdmin();
+    }
+
+    // 3. Videos Collection (Knowledge Centre)
+    match /videos/{videoId} {
+      // Public visitors can only view published videos
+      allow read: if (resource.data.published == true || resource.data.isPublished == true) || isAdmin();
+
+      // Only authorized admin can create, update, or delete video documents
+      allow write: if isAdmin();
+    }
+
+    // 4. Default fallback: Admin-only access for any other collections / documents
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

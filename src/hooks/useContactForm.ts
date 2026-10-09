@@ -4,19 +4,19 @@ import { contactFormRules } from '@/utils/validation'
 import { useFormSubmission } from './useFormSubmission'
 
 const INITIAL_VALUES: ContactFormValues = {
-  firstName: '',
-  lastName: '',
+  fullName: '',
   email: '',
-  phone: '',
   company: '',
   jobTitle: '',
-  service: '',
+  country: '',
+  industry: '',
   message: '',
+  consent: false,
 }
 
-/** State for the Contact page form (UI built in Phase 5). */
+/** State for the Contact page form matching SecureXmotive_Contact_Us_Form.pdf. */
 export function useContactForm() {
-  return useFormSubmission({
+  return useFormSubmission<ContactFormValues>({
     initialValues: INITIAL_VALUES,
     rules: contactFormRules,
     submit: submitContactForm,

@@ -1,5 +1,11 @@
-import { API_ENDPOINTS, apiRequest } from './api'
-import type { AdminApplication } from '@/admin/types/application'
+/**
+ * Admin Application Service
+ *
+ * Migrated to Cloud Firestore (Phase 7).
+ * Interacts directly with the Firestore `applications` collection.
+ */
+import type { AdminApplication, ApplicationStatus } from '@/admin/types/application'
+import { firestoreApplicationService } from './firestoreApplicationService'
 
 export interface BackendCareerApplication {
   id: string
@@ -13,101 +19,42 @@ export interface BackendCareerApplication {
   createdAt: string
 }
 
-interface ApplicationsListResponse {
-  success: boolean
-  data: BackendCareerApplication[]
-  pagination?: {
-    total: number
-    page: number
-    limit: number
-    totalPages: number
-  }
-}
-
-interface ApplicationDetailResponse {
-  success: boolean
-  message?: string
-  data: BackendCareerApplication
-}
-
-interface ResumeDownloadResponse {
-  success: boolean
-  message: string
-  data: {
-    url: string
-    expiresIn: number
-    fileName: string
-  }
-}
-
-export function mapBackendApplication(item: BackendCareerApplication): AdminApplication {
-  return {
-    id: item.id,
-    fullName: item.fullName,
-    email: item.email,
-    phone: item.phone,
-    experience: item.experience,
-    role: 'Career Applicant',
-    linkedin: item.linkedin || '',
-    resumeFileName: item.resumeOriginalName || 'resume.pdf',
-    resumeFileSize: 'PDF/DOC',
-    coverNote: item.experience,
-    status: 'NEW',
-    submittedAt: item.createdAt,
-  }
-}
-
 export const adminApplicationService = {
   /**
-   * Fetch all career applications from backend.
+   * Fetch all career applications from Cloud Firestore.
    */
-  async getApplications(params?: { page?: number; limit?: number }, signal?: AbortSignal): Promise<{
+  async getApplications(params?: { page?: number; limit?: number }, _signal?: AbortSignal): Promise<{
     applications: AdminApplication[]
     total: number
   }> {
-    const res = await apiRequest<ApplicationsListResponse>(API_ENDPOINTS.adminCareers, {
-      method: 'GET',
-      params: {
-        page: params?.page ?? 1,
-        limit: params?.limit ?? 100,
-      },
-      signal,
-    })
-
-    const rawList = Array.isArray(res.data) ? res.data : []
-    const applications = rawList.map(mapBackendApplication)
-    const total = res.pagination?.total ?? applications.length
-
-    return { applications, total }
+    return firestoreApplicationService.getApplications({ limit: params?.limit ?? 100 })
   },
 
   /**
-   * Fetch a single application by ID from backend.
+   * Fetch a single application by ID from Cloud Firestore.
    */
-  async getApplicationById(id: string, signal?: AbortSignal): Promise<AdminApplication> {
-    const res = await apiRequest<ApplicationDetailResponse>(`${API_ENDPOINTS.adminCareers}/${id}`, {
-      method: 'GET',
-      signal,
-    })
-    return mapBackendApplication(res.data)
+  async getApplicationById(id: string, _signal?: AbortSignal): Promise<AdminApplication> {
+    return firestoreApplicationService.getApplicationById(id)
   },
 
   /**
-   * Generate short-lived presigned S3 URL to view/download applicant resume.
+   * Update status of an application in Cloud Firestore.
+   */
+  async updateApplicationStatus(id: string, status: ApplicationStatus): Promise<void> {
+    return firestoreApplicationService.updateApplicationStatus(id, status)
+  },
+
+  /**
+   * Preserved resume download link resolver.
    */
   async getResumeDownloadUrl(id: string): Promise<{ url: string; fileName: string; expiresIn: number }> {
-    const res = await apiRequest<ResumeDownloadResponse>(`${API_ENDPOINTS.adminCareers}/${id}/resume`, {
-      method: 'GET',
-    })
-    return res.data
+    return firestoreApplicationService.getResumeDownloadUrl(id)
   },
 
   /**
-   * Delete career application and its associated S3 resume file.
+   * Delete career application from Cloud Firestore.
    */
   async deleteApplication(id: string): Promise<void> {
-    await apiRequest<void>(`${API_ENDPOINTS.adminCareers}/${id}`, {
-      method: 'DELETE',
-    })
+    return firestoreApplicationService.deleteApplication(id)
   },
 }

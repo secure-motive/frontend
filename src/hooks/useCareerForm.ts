@@ -5,20 +5,21 @@ import { careerFormRules, validateResume } from '@/utils/validation'
 import { useFormSubmission } from './useFormSubmission'
 
 const INITIAL_VALUES: CareerApplicationValues = {
-  firstName: '',
-  lastName: '',
+  fullName: '',
   email: '',
   phone: '',
+  currentLocation: '',
   linkedin: '',
-  role: '',
-  experience: '',
-  coverNote: '',
+  consent: false,
 }
+
+export type UploadStep = 'idle' | 'presigning' | 'uploading' | 'saving' | 'done'
 
 /** State for the Careers "Submit resume" form: the text fields plus the resume file. */
 export function useCareerForm() {
   const [resume, setResumeFile] = useState<File | null>(null)
   const [resumeError, setResumeError] = useState<string>()
+  const [uploadStep, setUploadStep] = useState<UploadStep>('idle')
 
   /** Stores the chosen file and reports a wrong type or size straight away. */
   const setResume = (file: File | null) => {
@@ -26,7 +27,7 @@ export function useCareerForm() {
     setResumeError(file ? validateResume(file) : undefined)
   }
 
-  const form = useFormSubmission({
+  const form = useFormSubmission<CareerApplicationValues>({
     initialValues: INITIAL_VALUES,
     rules: careerFormRules,
     validateExtra: () => {
@@ -34,12 +35,20 @@ export function useCareerForm() {
       setResumeError(error)
       return !error
     },
-    // validateExtra has already rejected a missing file by the time this runs.
-    submit: (values) => submitCareerApplication({ ...values, resume: resume as File }),
-    onDelivered: () => setResumeFile(null),
+    submit: (values) => {
+      setUploadStep('presigning')
+      return submitCareerApplication(
+        { ...values, resume: resume as File },
+        (step) => setUploadStep(step),
+      )
+    },
+    onDelivered: () => {
+      setResumeFile(null)
+      setUploadStep('idle')
+    },
   })
 
-  return { ...form, resume, resumeError, setResume }
+  return { ...form, resume, resumeError, setResume, uploadStep }
 }
 
 export type CareerFormState = ReturnType<typeof useCareerForm>

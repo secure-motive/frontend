@@ -6,23 +6,23 @@ import { EyeIcon, EyeOffIcon, AlertTriangleIcon } from '../components/AdminIcons
 import { AdminButton } from '../components/AdminButton'
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState('admin@securexmotive.com')
-  const [password, setPassword] = useState('Admin@SecureX2026!')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const { login, isAuthenticated, sessionExpired } = useAdminAuth()
+  const { login, isAuthenticated, isLoading, sessionExpired } = useAdminAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated once loading completes
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!isLoading && isAuthenticated) {
       const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/admin'
       navigate(from, { replace: true })
     }
-  }, [isAuthenticated, navigate, location.state])
+  }, [isAuthenticated, isLoading, navigate, location.state])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -50,6 +50,21 @@ export default function AdminLogin() {
       setIsSubmitting(false)
     }
   }
+
+  // Prevent flash of login screen while checking existing Firebase session
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-cyber-bg text-cyber-muted">
+        <div className="flex flex-col items-center gap-3">
+          <div className="size-8 animate-spin rounded-full border-2 border-cyber-teal border-t-transparent" />
+          <span className="font-code text-xs tracking-widest text-cyber-muted uppercase">
+            Verifying Session...
+          </span>
+        </div>
+      </div>
+    )
+  }
+
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-cyber-bg p-4 text-white">
@@ -115,10 +130,11 @@ export default function AdminLogin() {
                 type="email"
                 autoComplete="email"
                 required
+                disabled={isSubmitting}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@securexmotive.com"
-                className="w-full rounded-lg border border-cyber-teal/20 bg-cyber-field px-4 py-3 font-body text-sm text-cyber-value placeholder:text-cyber-placeholder/50 transition-colors focus:border-cyber-teal/60 focus:ring-2 focus:ring-cyber-teal/20 focus:outline-none"
+                className="w-full rounded-lg border border-cyber-teal/20 bg-cyber-field px-4 py-3 font-body text-sm text-cyber-value placeholder:text-cyber-placeholder/50 transition-colors focus:border-cyber-teal/60 focus:ring-2 focus:ring-cyber-teal/20 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -137,15 +153,17 @@ export default function AdminLogin() {
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   required
+                  disabled={isSubmitting}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full rounded-lg border border-cyber-teal/20 bg-cyber-field px-4 py-3 pr-11 font-body text-sm text-cyber-value placeholder:text-cyber-placeholder/50 transition-colors focus:border-cyber-teal/60 focus:ring-2 focus:ring-cyber-teal/20 focus:outline-none"
+                  className="w-full rounded-lg border border-cyber-teal/20 bg-cyber-field px-4 py-3 pr-11 font-body text-sm text-cyber-value placeholder:text-cyber-placeholder/50 transition-colors focus:border-cyber-teal/60 focus:ring-2 focus:ring-cyber-teal/20 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <button
                   type="button"
+                  disabled={isSubmitting}
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 rounded p-1 text-cyber-muted hover:text-white transition-colors"
+                  className="absolute top-1/2 right-3 -translate-y-1/2 rounded p-1 text-cyber-muted hover:text-white transition-colors disabled:opacity-50"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
@@ -163,6 +181,7 @@ export default function AdminLogin() {
                 variant="primary"
                 size="lg"
                 fullWidth
+                disabled={isSubmitting}
                 isLoading={isSubmitting}
               >
                 Sign In to Console

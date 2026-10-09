@@ -36,9 +36,9 @@ export interface AdminDataContextValue {
   deleteMessage: (id: string) => Promise<boolean>
   getResumeDownloadUrl: (id: string) => Promise<{ url: string; fileName: string; expiresIn: number }>
 
-  // Local UI status helpers
-  markMessageAsRead: (id: string) => void
-  updateApplicationStatus: (id: string, status: ApplicationStatus) => void
+  // Local & Firestore UI status helpers
+  markMessageAsRead: (id: string) => Promise<void> | void
+  updateApplicationStatus: (id: string, status: ApplicationStatus) => Promise<void> | void
 
   // Reset / reload
   resetAllData: () => void

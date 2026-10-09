@@ -246,7 +246,7 @@ export default function AdminMessages() {
         {/* Footer info bar */}
         <div className="flex items-center justify-between border-t border-white/5 px-6 py-3 font-code text-2xs text-cyber-muted">
           <span>Showing {filteredMessages.length} of {messages.length} messages</span>
-          <span>PostgreSQL Database Integrated</span>
+          <span>Cloud Firestore Integrated</span>
         </div>
       </div>
     </div>

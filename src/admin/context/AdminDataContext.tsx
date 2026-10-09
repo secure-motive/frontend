@@ -1,16 +1,31 @@
-import { useEffect, useMemo, useState, useCallback, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef, type ReactNode } from 'react'
 import { useAdminAuth } from '../auth/useAdminAuth'
 import { adminApplicationService } from '@/services/adminApplicationService'
 import { adminMessageService } from '@/services/adminMessageService'
 import { adminVideoService } from '@/services/adminVideoService'
+import {
+  fetchDashboardStats,
+  getFirestoreStatsErrorMessage,
+} from '@/services/firestoreDashboardService'
 import type { AdminStats } from '../types/admin'
 import type { AdminApplication, ApplicationStatus } from '../types/application'
 import type { AdminContactMessage } from '../types/message'
 import type { AdminVideo, VideoFormValues } from '../types/video'
 import { AdminDataContext } from './AdminDataContextDefinition'
 
+/** Default zero-state for dashboard statistics. */
+const EMPTY_STATS: AdminStats = {
+  totalApplications: 0,
+  totalMessages: 0,
+  totalVideos: 0,
+  publishedVideos: 0,
+  draftVideos: 0,
+  newApplicationsCount: 0,
+  unreadMessagesCount: 0,
+}
+
 export function AdminDataProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAdminAuth()
+  const { isAuthenticated, firebaseUser, isLoading: isAuthLoading } = useAdminAuth()
 
   const [applications, setApplications] = useState<AdminApplication[]>([])
   const [messages, setMessages] = useState<AdminContactMessage[]>([])
@@ -18,12 +33,51 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Fetch all data from backend when authenticated
+  // Firestore dashboard statistics (Phase 6)
+  const [firestoreStats, setFirestoreStats] = useState<AdminStats>(EMPTY_STATS)
+  const [statsLoading, setStatsLoading] = useState<boolean>(false)
+  const [statsError, setStatsError] = useState<string | null>(null)
+  // Guard against duplicate concurrent Firestore requests
+  const statsRequestRef = useRef<number>(0)
+
+  /**
+   * Fetch dashboard statistics from Firestore.
+   * Ensures auth is settled and firebaseUser is active before initiating queries.
+   */
+  const refreshStats = useCallback(async () => {
+    if (!isAuthenticated || isAuthLoading || !firebaseUser) return
+
+    const requestId = ++statsRequestRef.current
+    setStatsLoading(true)
+    setStatsError(null)
+
+    try {
+      const stats = await fetchDashboardStats()
+      // Only apply if this is still the latest request (prevents race conditions)
+      if (requestId === statsRequestRef.current) {
+        setFirestoreStats(stats)
+      }
+    } catch (err) {
+      console.error('[Firestore Stats] Dashboard statistics fetch failed:', err)
+      if (requestId === statsRequestRef.current) {
+        setStatsError(getFirestoreStatsErrorMessage(err))
+      }
+    } finally {
+      if (requestId === statsRequestRef.current) {
+        setStatsLoading(false)
+      }
+    }
+  }, [isAuthenticated, isAuthLoading, firebaseUser])
+
+  // Fetch all collections from Cloud Firestore when authenticated
   const refreshAll = useCallback(async () => {
-    if (!isAuthenticated) return
+    if (!isAuthenticated || isAuthLoading || !firebaseUser) return
 
     setIsLoading(true)
     setError(null)
+
+    // Kick off Firestore stats refresh concurrently
+    void refreshStats()
 
     try {
       const [appsResult, msgsResult, vidsResult] = await Promise.allSettled([
@@ -35,28 +89,28 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
       if (appsResult.status === 'fulfilled') {
         setApplications(appsResult.value.applications)
       } else {
-        console.error('Failed to load applications:', appsResult.reason)
+        console.error('[Firestore Applications] Failed to load applications:', appsResult.reason)
       }
 
       if (msgsResult.status === 'fulfilled') {
         setMessages(msgsResult.value.messages)
       } else {
-        console.error('Failed to load messages:', msgsResult.reason)
+        console.error('[Firestore Messages] Failed to load messages:', msgsResult.reason)
       }
 
       if (vidsResult.status === 'fulfilled') {
         setVideos(vidsResult.value.videos)
       } else {
-        console.error('Failed to load videos:', vidsResult.reason)
+        console.error('[Firestore Videos] Failed to load videos:', vidsResult.reason)
       }
 
-      // If all three failed, surface an aggregate error
+      // If all three collections failed, surface an error
       if (
         appsResult.status === 'rejected' &&
         msgsResult.status === 'rejected' &&
         vidsResult.status === 'rejected'
       ) {
-        setError('Unable to connect to backend services. Please check network connection.')
+        setError('Failed to load data from Cloud Firestore. Please check your network connection.')
       }
     } catch (err) {
       console.error('Data refresh error:', err)
@@ -64,17 +118,17 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, isAuthLoading, firebaseUser, refreshStats])
 
   // Trigger initial fetch when authentication state is confirmed
   useEffect(() => {
     let isMounted = true
 
-    if (isAuthenticated) {
+    if (isAuthenticated && !isAuthLoading && firebaseUser) {
       void Promise.resolve().then(() => {
         if (isMounted) void refreshAll()
       })
-    } else {
+    } else if (!isAuthenticated && !isAuthLoading) {
       // Clear data when unauthenticated
       void Promise.resolve().then(() => {
         if (isMounted) {
@@ -82,6 +136,8 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
           setMessages([])
           setVideos([])
           setError(null)
+          setFirestoreStats(EMPTY_STATS)
+          setStatsError(null)
         }
       })
     }
@@ -89,10 +145,19 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     return () => {
       isMounted = false
     }
-  }, [isAuthenticated, refreshAll])
+  }, [isAuthenticated, isAuthLoading, firebaseUser, refreshAll])
 
-  // Compute live statistics based on real backend items
+  /**
+   * Merged statistics: Firestore stats are authoritative for dashboard
+   * counts. When Firestore stats are available, use them. Fall back to
+   * locally-computed stats from loaded data only if Firestore stats are
+   * still at the zero initial state (not yet loaded).
+   */
   const stats = useMemo<AdminStats>(() => {
+    if (!statsLoading && (firestoreStats !== EMPTY_STATS || statsError)) {
+      return firestoreStats
+    }
+
     const publishedVideos = videos.filter((v) => v.isPublished).length
     return {
       totalApplications: applications.length,
@@ -103,14 +168,26 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
       newApplicationsCount: applications.filter((a) => a.status === 'NEW').length,
       unreadMessagesCount: messages.filter((m) => !m.isRead).length,
     }
-  }, [applications, messages, videos])
+  }, [firestoreStats, statsLoading, statsError, applications, messages, videos])
+
+  // Combined loading state: either collection records or dashboard stats are loading
+  const combinedLoading = isLoading || statsLoading
+
+  // Combined error
+  const combinedError = useMemo(() => {
+    if (statsError && error) {
+      if (statsError === error) return statsError
+      return `${statsError} — Additionally: ${error}`
+    }
+    return statsError || error
+  }, [statsError, error])
 
   // Synchronous cache lookup helpers
   const getApplication = useCallback((id: string) => applications.find((a) => a.id === id), [applications])
   const getMessage = useCallback((id: string) => messages.find((m) => m.id === id), [messages])
   const getVideo = useCallback((id: string) => videos.find((v) => v.id === id), [videos])
 
-  // Direct backend fetchers
+  // Direct backend / Firestore fetchers
   const fetchApplication = useCallback(async (id: string): Promise<AdminApplication> => {
     const app = await adminApplicationService.getApplicationById(id)
     setApplications((prev) => {
@@ -138,7 +215,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     return vid
   }, [])
 
-  // Video CRUD actions connected to backend API
+  // Video CRUD actions connected to Cloud Firestore
   const addVideo = useCallback(async (values: VideoFormValues): Promise<AdminVideo> => {
     const created = await adminVideoService.createVideo(values)
     setVideos((prev) => [created, ...prev.filter((v) => v.id !== created.id)])
@@ -176,7 +253,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     [videos],
   )
 
-  // Applications & Messages backend actions
+  // Applications & Messages actions
   const deleteApplication = useCallback(async (id: string): Promise<boolean> => {
     await adminApplicationService.deleteApplication(id)
     setApplications((prev) => prev.filter((a) => a.id !== id))
@@ -193,12 +270,18 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     return await adminApplicationService.getResumeDownloadUrl(id)
   }, [])
 
-  // Local UI status helpers
-  const markMessageAsRead = useCallback((id: string) => {
+  // Local & Firestore UI status helpers
+  const markMessageAsRead = useCallback(async (id: string) => {
+    try {
+      await adminMessageService.markMessageAsRead(id, true)
+    } catch (err) {
+      console.error('[Firestore Messages] Failed to mark message as read in Firestore:', err)
+    }
     setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, isRead: true } : m)))
   }, [])
 
-  const updateApplicationStatus = useCallback((id: string, status: ApplicationStatus) => {
+  const updateApplicationStatus = useCallback(async (id: string, status: ApplicationStatus) => {
+    await adminApplicationService.updateApplicationStatus(id, status)
     setApplications((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)))
   }, [])
 
@@ -213,8 +296,8 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
         messages,
         videos,
         stats,
-        isLoading,
-        error,
+        isLoading: combinedLoading,
+        error: combinedError,
         refreshAll,
         getApplication,
         getMessage,

@@ -253,17 +253,41 @@ export default function AdminMessageDetail() {
                 </a>
               </div>
 
-              <div className="border-t border-white/5 pt-3 space-y-1">
-                <p className="font-code text-3xs tracking-widest text-cyber-muted uppercase">
-                  Phone Number
-                </p>
-                <a
-                  href={`tel:${message.phone}`}
-                  className="block font-body text-sm text-cyber-teal hover:underline"
-                >
-                  {message.phone}
-                </a>
-              </div>
+              {message.country && (
+                <div className="border-t border-white/5 pt-3 space-y-1">
+                  <p className="font-code text-3xs tracking-widest text-cyber-muted uppercase">
+                    Country / Region
+                  </p>
+                  <p className="font-body text-sm text-white/90">
+                    {message.country}
+                  </p>
+                </div>
+              )}
+
+              {message.industry && (
+                <div className="border-t border-white/5 pt-3 space-y-1">
+                  <p className="font-code text-3xs tracking-widest text-cyber-muted uppercase">
+                    Industry Sector
+                  </p>
+                  <p className="font-body text-sm text-white/90">
+                    {message.industry}
+                  </p>
+                </div>
+              )}
+
+              {message.phone && message.phone !== 'Not provided' && (
+                <div className="border-t border-white/5 pt-3 space-y-1">
+                  <p className="font-code text-3xs tracking-widest text-cyber-muted uppercase">
+                    Phone Number
+                  </p>
+                  <a
+                    href={`tel:${message.phone}`}
+                    className="block font-body text-sm text-cyber-teal hover:underline"
+                  >
+                    {message.phone}
+                  </a>
+                </div>
+              )}
 
               <div className="border-t border-white/5 pt-3 space-y-1">
                 <p className="font-code text-3xs tracking-widest text-cyber-muted uppercase">

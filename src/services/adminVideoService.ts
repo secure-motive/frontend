@@ -1,6 +1,11 @@
-import { API_ENDPOINTS, apiRequest } from './api'
+/**
+ * Admin Video Service
+ *
+ * Migrated to Cloud Firestore (Phase 8).
+ * Interacts directly with the Firestore `videos` collection.
+ */
 import type { AdminVideo, VideoFormValues } from '@/admin/types/video'
-import { getYoutubeThumbnail } from '@/admin/utils/videoUtils'
+import { firestoreVideoService } from './firestoreVideoService'
 
 export interface BackendVideo {
   id: string
@@ -12,130 +17,56 @@ export interface BackendVideo {
   updatedAt: string
 }
 
-interface VideoListResponse {
-  success: boolean
-  data: BackendVideo[]
-  pagination?: {
-    total: number
-    page: number
-    limit: number
-    totalPages: number
-  }
-}
-
-interface VideoDetailResponse {
-  success: boolean
-  message?: string
-  data: BackendVideo
-}
-
-export function mapBackendVideo(item: BackendVideo): AdminVideo {
-  return {
-    id: item.id,
-    title: item.title,
-    description: item.description || '',
-    youtubeUrl: item.youtubeUrl,
-    thumbnailUrl: getYoutubeThumbnail(item.youtubeUrl) || undefined,
-    isPublished: item.isPublished,
-    createdAt: item.createdAt,
-    updatedAt: item.updatedAt,
-  }
-}
-
 export const adminVideoService = {
   /**
-   * Fetch all videos (published & unpublished) for administration.
+   * Fetch all videos for administration from Cloud Firestore.
    */
-  async getVideos(params?: { page?: number; limit?: number }, signal?: AbortSignal): Promise<{
+  async getVideos(params?: { page?: number; limit?: number }, _signal?: AbortSignal): Promise<{
     videos: AdminVideo[]
     total: number
   }> {
-    const res = await apiRequest<VideoListResponse>(API_ENDPOINTS.adminVideos, {
-      method: 'GET',
-      params: {
-        page: params?.page ?? 1,
-        limit: params?.limit ?? 100,
-      },
-      signal,
-    })
-
-    const rawList = Array.isArray(res.data) ? res.data : []
-    const videos = rawList.map(mapBackendVideo)
-    const total = res.pagination?.total ?? videos.length
-
-    return { videos, total }
+    return firestoreVideoService.getVideos({ limit: params?.limit ?? 100 })
   },
 
   /**
-   * Fetch a single video record by ID.
+   * Fetch a single video record by ID from Cloud Firestore.
    */
-  async getVideoById(id: string, signal?: AbortSignal): Promise<AdminVideo> {
-    const res = await apiRequest<VideoDetailResponse>(`${API_ENDPOINTS.adminVideos}/${id}`, {
-      method: 'GET',
-      signal,
-    })
-    return mapBackendVideo(res.data)
+  async getVideoById(id: string, _signal?: AbortSignal): Promise<AdminVideo> {
+    return firestoreVideoService.getVideoById(id)
   },
 
   /**
-   * Create a new video entry.
+   * Create a new video entry in Cloud Firestore.
    */
   async createVideo(values: VideoFormValues): Promise<AdminVideo> {
-    const res = await apiRequest<VideoDetailResponse>(API_ENDPOINTS.adminVideos, {
-      method: 'POST',
-      body: {
-        title: values.title.trim(),
-        description: values.description ? values.description.trim() : null,
-        youtubeUrl: values.youtubeUrl.trim(),
-        isPublished: values.isPublished,
-      },
-    })
-    return mapBackendVideo(res.data)
+    return firestoreVideoService.createVideo(values)
   },
 
   /**
-   * Update video record.
+   * Update video record in Cloud Firestore.
    */
   async updateVideo(id: string, values: Partial<VideoFormValues>): Promise<AdminVideo> {
-    const body: Record<string, unknown> = {}
-    if (values.title !== undefined) body.title = values.title.trim()
-    if (values.description !== undefined) body.description = values.description.trim() || null
-    if (values.youtubeUrl !== undefined) body.youtubeUrl = values.youtubeUrl.trim()
-    if (values.isPublished !== undefined) body.isPublished = values.isPublished
-
-    const res = await apiRequest<VideoDetailResponse>(`${API_ENDPOINTS.adminVideos}/${id}`, {
-      method: 'PUT',
-      body,
-    })
-    return mapBackendVideo(res.data)
+    return firestoreVideoService.updateVideo(id, values)
   },
 
   /**
-   * Delete video record.
+   * Delete video record from Cloud Firestore.
    */
   async deleteVideo(id: string): Promise<void> {
-    await apiRequest<void>(`${API_ENDPOINTS.adminVideos}/${id}`, {
-      method: 'DELETE',
-    })
+    return firestoreVideoService.deleteVideo(id)
   },
 
   /**
-   * Publish a video.
+   * Publish a video in Cloud Firestore.
    */
   async publishVideo(id: string): Promise<AdminVideo> {
-    const res = await apiRequest<VideoDetailResponse>(`${API_ENDPOINTS.adminVideos}/${id}/publish`, {
-      method: 'PATCH',
-    })
-    return mapBackendVideo(res.data)
+    return firestoreVideoService.publishVideo(id)
   },
 
   /**
-   * Unpublish a video.
+   * Unpublish a video in Cloud Firestore.
    */
   async unpublishVideo(id: string): Promise<AdminVideo> {
-    const res = await apiRequest<VideoDetailResponse>(`${API_ENDPOINTS.adminVideos}/${id}/unpublish`, {
-      method: 'PATCH',
-    })
-    return mapBackendVideo(res.data)
+    return firestoreVideoService.unpublishVideo(id)
   },
 }

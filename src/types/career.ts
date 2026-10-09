@@ -20,17 +20,14 @@ export interface Benefit {
   description: string
 }
 
-/** Text fields of the "Submit resume" form, in design order. */
+/** Text fields of the Careers / Resume Upload form, in design order according to SecureXmotive_Resume_Upload_Form.pdf */
 export interface CareerApplicationValues {
-  firstName: string
-  lastName: string
+  fullName: string
   email: string
   phone: string
+  currentLocation: string
   linkedin: string
-  role: string
-  /** Years of experience, as typed. */
-  experience: string
-  coverNote: string
+  consent: boolean
 }
 
 /** A complete application: the text fields plus the uploaded resume. */

@@ -300,7 +300,7 @@ export default function AdminApplications() {
         {/* Footer info bar */}
         <div className="flex items-center justify-between border-t border-white/5 px-6 py-3 font-code text-2xs text-cyber-muted">
           <span>Showing {filteredApplications.length} of {applications.length} applications</span>
-          <span>PostgreSQL / S3 Integrated</span>
+          <span>Cloud Firestore Integrated</span>
         </div>
       </div>
     </div>

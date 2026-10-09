@@ -1,30 +1,50 @@
-# SecureXmotive Admin Portal — Developer Credentials & Phase 1 Notes
+# SecureXmotive Admin Portal — Authentication & Credentials Guide
 
-## ⚠️ Phase 1: Frontend Only (Mock Mode)
+## 🔐 Phase 5: Firebase Authentication
 
-This admin portal is currently running in **Phase 1: Frontend Only**.
-- No backend connection or database is accessed.
-- All actions (login, logout, video CRUD, publish toggles, search/filter) operate on client-side state with `localStorage` persistence.
-- Phase 2 will replace these mock handlers with real Express/Prisma/PostgreSQL/JWT endpoints.
+The Admin Portal authentication is integrated directly with **Firebase Authentication** (`securexmotivebase`).
+
+- Authentication mechanism: Firebase Email/Password (`signInWithEmailAndPassword` / `signOut`)
+- Real-time session state: Managed via Firebase `onAuthStateChanged`
+- Storage: Firebase client SDK securely manages session tokens in IndexedDB; no passwords or secrets are stored in `localStorage` or `sessionStorage`.
+- Route protection: Enforced by `AdminProtectedRoute` guarding `/admin/*`.
+- Access control: Enforced by checking the authenticated user's UID against `VITE_FIREBASE_ADMIN_UID`. If an account without the authorized Admin UID logs in, it is immediately denied access and signed out.
+- Authoritative security: Firestore security rules validate that all database writes/reads are restricted to the authorized admin UID.
 
 ---
 
-## 🔐 Mock Admin Credentials
+## 🔑 Admin Credentials
 
-To log into the Admin Portal (`/admin/login`), use either of the following credentials:
+Admin credentials are created and managed directly in the **Firebase Console**:
+- **Console**: [Firebase Console > Authentication > Users](https://console.firebase.google.com/)
+- Sign in with the registered administrator email & password.
 
-| Field | Value |
-| :--- | :--- |
-| **Email** | `admin@securexmotive.com` |
-| **Password** | `Admin@SecureX2026!` |
+---
 
-*(Alternative accepted test credentials: `security@securexmotive.com` / `Password123!`)*
+## ⚙️ Environment Variables
+
+Add or verify the following in your `.env` file:
+
+```env
+# Firebase Configuration
+VITE_FIREBASE_API_KEY=AIzaSyC1TyVkbXbQVjBS8EN5koK8BekPzuZ0PlM
+VITE_FIREBASE_AUTH_DOMAIN=xmotivebase.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=securexmotivebase
+VITE_FIREBASE_STORAGE_BUCKET=xmotivebase.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=663045401238
+VITE_FIREBASE_APP_ID=1:663045401238:web:cb875176fef173aee2f0b7
+VITE_FIREBASE_MEASUREMENT_ID=G-WVS8PT1687
+
+# Designated Firebase Admin UID authorized to access Admin Portal
+# Copy this from Firebase Console > Authentication > Users (User UID column)
+VITE_FIREBASE_ADMIN_UID=
+```
 
 ---
 
 ## 📁 Key Routes
 
-- `/admin/login` — Mock Admin Login
+- `/admin/login` — Firebase Admin Login
 - `/admin` — Admin Dashboard with live stats & recent items
 - `/admin/applications` — Career Applications List & Search
 - `/admin/applications/:id` — Career Application Details
@@ -33,9 +53,3 @@ To log into the Admin Portal (`/admin/login`), use either of the following crede
 - `/admin/videos` — Video Management (List, Status Toggle, Delete)
 - `/admin/videos/new` — Create New Video
 - `/admin/videos/:id/edit` — Edit Existing Video
-
----
-
-## 💾 Local State Reset
-
-If you ever wish to reset the mock database back to its pristine seed data, you can click the **Reset Data** action in the Admin Portal navigation or clear the `localStorage` key `securexmotive_admin_data_v1`.
