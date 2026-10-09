@@ -258,3 +258,91 @@ export async function generatePresignedDownloadUrl(
     expiresIn: 300,
   }
 }
+
+export interface AdminAuthVerificationResult {
+  authorized: boolean
+  status: 200 | 401 | 403 | 500
+  uid?: string
+  error?: string
+}
+
+/**
+ * Validates a Firebase ID token on the server against Google's Identity Toolkit API
+ * and ensures the authenticated UID matches the designated administrator UID.
+ */
+export async function verifyAdminAuthorization(
+  idToken: string | undefined,
+  env?: Record<string, string | undefined>,
+): Promise<AdminAuthVerificationResult> {
+  if (!idToken || typeof idToken !== 'string' || !idToken.trim()) {
+    return {
+      authorized: false,
+      status: 401,
+      error: 'Authentication required. Missing Bearer token in Authorization header.',
+    }
+  }
+
+  const serverEnv = loadServerEnv(env)
+  const apiKey =
+    serverEnv.VITE_FIREBASE_API_KEY ||
+    serverEnv.FIREBASE_API_KEY ||
+    'AIzaSyC1TyVkbXbQVjBS8EN5koK8BekPzuZ0PlM'
+  const designatedAdminUid =
+    serverEnv.VITE_FIREBASE_ADMIN_UID ||
+    serverEnv.FIREBASE_ADMIN_UID ||
+    'C4Y2foGCBme6H1WUCbmUdu5ez1h1'
+
+  try {
+    const response = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: idToken.trim() }),
+      },
+    )
+
+    if (!response.ok) {
+      const errData = (await response.json().catch(() => ({}))) as { error?: { message?: string } }
+      const errMessage = errData?.error?.message || 'Invalid or expired Firebase ID token.'
+      return {
+        authorized: false,
+        status: 401,
+        error: `Authentication failed: ${errMessage}`,
+      }
+    }
+
+    const data = (await response.json()) as { users?: Array<{ localId?: string }> }
+    const authenticatedUid = data.users?.[0]?.localId
+
+    if (!authenticatedUid) {
+      return {
+        authorized: false,
+        status: 401,
+        error: 'Authentication failed: User record not found for the provided token.',
+      }
+    }
+
+    if (authenticatedUid !== designatedAdminUid) {
+      return {
+        authorized: false,
+        status: 403,
+        uid: authenticatedUid,
+        error: `Forbidden: Authenticated UID "${authenticatedUid}" is not authorized as an administrator.`,
+      }
+    }
+
+    return {
+      authorized: true,
+      status: 200,
+      uid: authenticatedUid,
+    }
+  } catch (netErr) {
+    return {
+      authorized: false,
+      status: 500,
+      error: `Internal authentication verification error: ${netErr instanceof Error ? netErr.message : String(netErr)}`,
+    }
+  }
+}
+

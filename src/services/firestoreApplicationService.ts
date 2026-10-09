@@ -196,6 +196,7 @@ export const firestoreApplicationService = {
   /**
    * Resume download reference handler.
    * Generates a short-lived presigned download URL for the resume in AWS S3.
+   * Authenticates the request by attaching the administrator's Firebase ID token.
    */
   async getResumeDownloadUrl(id: string): Promise<{ url: string; fileName: string; expiresIn: number }> {
     const app = await this.getApplicationById(id)
@@ -203,7 +204,17 @@ export const firestoreApplicationService = {
 
     if (key && key !== 'pending_upload' && key !== 'none') {
       try {
-        const res = await fetch(`/api/get-resume-download-url?key=${encodeURIComponent(key)}&fileName=${encodeURIComponent(app.resumeFileName)}`)
+        const token = await auth.currentUser?.getIdToken()
+        const headers: Record<string, string> = {}
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+
+        const res = await fetch(
+          `/api/get-resume-download-url?key=${encodeURIComponent(key)}&fileName=${encodeURIComponent(app.resumeFileName)}`,
+          { headers },
+        )
+
         if (res.ok) {
           const data = await res.json()
           if (data.url && data.url !== '#') {
@@ -213,6 +224,9 @@ export const firestoreApplicationService = {
               expiresIn: data.expiresIn || 300,
             }
           }
+        } else {
+          const errData = await res.json().catch(() => ({}))
+          console.warn('[Firestore Applications] Server download authorization rejected:', errData.error || res.statusText)
         }
       } catch (err) {
         console.warn('[Firestore Applications] Error requesting presigned download URL:', err)

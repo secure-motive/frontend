@@ -9,9 +9,7 @@ import {
 import {
   getFirestore,
   collection,
-  doc,
   getDocs,
-  getDoc,
   Timestamp,
 } from 'firebase/firestore'
 

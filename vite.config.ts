@@ -5,6 +5,7 @@ import { defineConfig, loadEnv, type Plugin } from 'vite'
 import {
   generatePresignedUploadUrl,
   generatePresignedDownloadUrl,
+  verifyAdminAuthorization,
 } from './src/server/s3-service.ts'
 
 /**
@@ -77,6 +78,21 @@ function localDevApiPlugin(env: Record<string, string>): Plugin {
             return
           }
 
+          // 1. Authenticate administrator via Firebase ID token
+          const authHeader = (req.headers?.authorization || req.headers?.Authorization) as string | undefined
+          const queryToken = parsedUrl.searchParams.get('token') || undefined
+          const idToken = authHeader?.replace(/^Bearer\s+/i, '').trim() || queryToken?.trim()
+
+          const authCheck = await verifyAdminAuthorization(idToken, env)
+          if (!authCheck.authorized) {
+            res.setHeader('Access-Control-Allow-Origin', '*')
+            res.setHeader('Content-Type', 'application/json')
+            res.statusCode = authCheck.status
+            res.end(JSON.stringify({ error: authCheck.error || 'Unauthorized: Administrator authentication required.' }))
+            return
+          }
+
+          // 2. Validate S3 object key
           const key = parsedUrl.searchParams.get('key') || ''
           const fileName = parsedUrl.searchParams.get('fileName') || 'resume.pdf'
 
@@ -113,6 +129,31 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
+      },
+    },
+    build: {
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('firestore')) {
+              return 'vendor-firebase-firestore'
+            }
+            if (id.includes('auth')) {
+              return 'vendor-firebase-auth'
+            }
+            if (id.includes('node_modules/firebase') || id.includes('@firebase')) {
+              return 'vendor-firebase-core'
+            }
+            if (
+              id.includes('node_modules/react') ||
+              id.includes('node_modules/react-dom') ||
+              id.includes('node_modules/react-router')
+            ) {
+              return 'vendor-react'
+            }
+          },
+        },
       },
     },
   }

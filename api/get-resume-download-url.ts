@@ -1,4 +1,7 @@
-import { generatePresignedDownloadUrl } from '../src/server/s3-service'
+import {
+  generatePresignedDownloadUrl,
+  verifyAdminAuthorization,
+} from '../src/server/s3-service'
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -10,6 +13,19 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
+    // 1. Authenticate administrator via Firebase ID token
+    const authHeader = (req.headers?.authorization || req.headers?.Authorization) as string | undefined
+    const queryToken = req.query?.token as string | undefined
+    const idToken = authHeader?.replace(/^Bearer\s+/i, '').trim() || queryToken?.trim()
+
+    const authCheck = await verifyAdminAuthorization(idToken)
+    if (!authCheck.authorized) {
+      return res.status(authCheck.status).json({
+        error: authCheck.error || 'Unauthorized: Administrator authentication required.',
+      })
+    }
+
+    // 2. Validate S3 object key
     const key = (req.query?.key || req.body?.key) as string
     const fileName = (req.query?.fileName || req.body?.fileName || 'resume.pdf') as string
 

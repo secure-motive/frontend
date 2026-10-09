@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useSearchParams } from 'react-router'
 import Button from '@/components/common/Button'
 import { useVideos } from '@/hooks/useVideos'
@@ -12,19 +12,18 @@ export default function VideoList() {
   const { status, videos, retry } = useVideos()
   const [searchParams] = useSearchParams()
 
-  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null)
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null)
   const [theaterVideo, setTheaterVideo] = useState<Video | null>(null)
 
-  // If a specific video ID is provided in the query params (?tab=videos&v=<id>), activate it
-  useEffect(() => {
-    const videoParam = searchParams.get('v')
-    if (videoParam && videos.length > 0) {
-      const match = videos.find((v) => v.id === videoParam)
-      if (match) {
-        setPlayingVideoId(match.id)
-      }
-    }
-  }, [searchParams, videos])
+  // Derive active playing video from user selection or URL param (?tab=videos&v=<id>)
+  const urlVideoParam = searchParams.get('v')
+  const playingVideoId =
+    activeVideoId ??
+    (urlVideoParam && videos.some((v) => v.id === urlVideoParam) ? urlVideoParam : null)
+
+  const setPlayingVideoId = (id: string | null) => {
+    setActiveVideoId(id)
+  }
 
   if (status === 'loading') return <TabMessage>Loading videos…</TabMessage>
 
