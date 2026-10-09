@@ -48,6 +48,8 @@ export interface ServiceDomain {
   tagline?: string
   /** Opening paragraph of the domain page. Not supplied yet. */
   intro?: string
+  /** Background video source, e.g. /gifs/agriculture.mp4 */
+  video?: string
   items: ServiceItem[]
   /** Standards and protocols the domain's own content names. */
   standards: string[]
