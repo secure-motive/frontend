@@ -41,7 +41,7 @@ export function FieldShell({ id, label, required, error, className, children }: 
         className="mb-2 block font-code text-xs tracking-widest text-cyber-muted uppercase"
       >
         {label}
-        {required && <span aria-hidden="true"> *</span>}
+        {required && <span aria-hidden="true" className="text-cyber-orange"> *</span>}
       </label>
       {children}
       {error && (
@@ -103,7 +103,7 @@ export function TextField({
 }
 
 interface SelectFieldProps extends FieldProps {
-  /** Text of the empty first option, e.g. "Select a service". */
+  /** Text of the empty first option, e.g. "Select your industry". */
   placeholder: string
   options: readonly string[]
 }
@@ -129,7 +129,7 @@ export function SelectField({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           required={required}
-          className={cn(CONTROL_CLASSES, 'appearance-none py-2.75 pr-10 pl-5')}
+          className={cn(CONTROL_CLASSES, 'appearance-none py-3 pr-10 pl-4')}
           {...describe(id, error)}
         >
           <option value="">{placeholder}</option>
@@ -147,7 +147,6 @@ export function SelectField({
 
 interface TextAreaFieldProps extends FieldProps {
   placeholder?: string
-  /** Five lines (131px) on the Contact form, four (110px) on the Career form. */
   size?: 'md' | 'lg'
 }
 
@@ -173,7 +172,6 @@ export function TextAreaField({
         required={required}
         placeholder={placeholder}
         rows={size === 'lg' ? 5 : 4}
-        // The design leaves 7px more under a textarea than under other fields.
         className={cn(
           CONTROL_CLASSES,
           'mb-1.75 block resize-none px-4 py-3 leading-5.25',
@@ -181,5 +179,65 @@ export function TextAreaField({
         {...describe(id, error)}
       />
     </FieldShell>
+  )
+}
+
+interface CheckboxFieldProps {
+  id?: string
+  name: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+  error?: string
+  required?: boolean
+  className?: string
+  children: ReactNode
+}
+
+export function CheckboxField({
+  id: customId,
+  name,
+  checked,
+  onChange,
+  error,
+  required,
+  className,
+  children,
+}: CheckboxFieldProps) {
+  const generatedId = useId()
+  const id = customId || generatedId
+
+  return (
+    <div className={cn('space-y-1.5', className)}>
+      <label htmlFor={id} className="flex items-start gap-3 cursor-pointer select-none">
+        <div className="relative flex items-center justify-center shrink-0 mt-0.5">
+          <input
+            id={id}
+            name={name}
+            type="checkbox"
+            checked={checked}
+            onChange={(e) => onChange(e.target.checked)}
+            required={required}
+            className="peer sr-only"
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? `${id}-error` : undefined}
+          />
+          <div className="size-5 rounded border border-cyber-teal/30 bg-cyber-field transition-all peer-checked:border-cyber-teal peer-checked:bg-cyber-teal/20 peer-focus-visible:ring-2 peer-focus-visible:ring-cyber-teal flex items-center justify-center">
+            {checked && (
+              <svg className="size-3.5 text-cyber-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </div>
+        </div>
+        <span className="font-body text-xs sm:text-sm text-cyber-muted leading-relaxed">
+          {children}
+        </span>
+      </label>
+      {error && (
+        <p id={`${id}-error`} className="ml-8 font-code text-2xs text-cyber-orange">
+          {error}
+        </p>
+      )}
+    </div>
   )
 }

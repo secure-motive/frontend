@@ -9,6 +9,7 @@ import '@fontsource-variable/inter/wght-italic.css'
 import '@fontsource-variable/jetbrains-mono/wght.css'
 
 import './index.css'
+import '@/lib/firebase'
 import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(

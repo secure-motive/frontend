@@ -12,15 +12,14 @@ function ServiceCard({ domain }: { domain: ServiceDomain }) {
   return (
     <Card to={serviceDetailPath(domain.slug)} className="flex h-full flex-col p-6">
       <div className="mb-4 flex items-center justify-between">
-        <Tag>{domain.label}</Tag>
+        <Tag className="text-cyber-teal">{domain.label}</Tag>
         <ArrowRightIcon className="size-4 text-cyber-muted transition-colors group-hover:text-cyber-teal" />
       </div>
-      <h3 className="mb-2.75 font-display text-xl font-semibold tracking-wide text-white transition-colors group-hover:text-cyber-teal">
+      <h3 className="mb-2.5 font-display text-xl font-semibold tracking-wide text-white transition-colors group-hover:text-cyber-teal">
         {domain.name}
       </h3>
-      {/* No card copy has been supplied, so the card lists the domain's services. */}
       <p className="text-sm leading-relaxed text-white/75">
-        {domain.items.map((item) => item.title).join(', ')}.
+        {domain.summary || domain.items.map((item) => item.title).join(', ') + '.'}
       </p>
     </Card>
   )

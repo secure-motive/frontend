@@ -1,25 +1,26 @@
 import { useState } from 'react'
-import type { SubmissionResult } from '@/services/api'
+import type { SubmissionResult } from '@/types/form'
 import { validateForm, type FormErrors, type FormRules } from '@/utils/validation'
 
 /**
- * `success` — the backend accepted the submission.
- * `preview` — the form is valid but the API is switched off, so nothing was sent.
+ * `success` — the submission succeeded.
+ * `preview` — the form is valid but preview mode is active.
+ * `error` — submission failed.
  */
 export type SubmitStatus = 'idle' | 'submitting' | 'success' | 'preview' | 'error'
 
-interface UseFormSubmissionOptions<T> {
+interface UseFormSubmissionOptions<T extends object> {
   initialValues: T
   rules: FormRules<T>
   submit: (values: T) => Promise<SubmissionResult>
   /** Checks outside the text fields (e.g. a file). Returns true when valid. */
   validateExtra?: () => boolean
-  /** Runs after the backend accepts a submission, to clear state held elsewhere. */
+  /** Runs after submission succeeds, to clear state held elsewhere. */
   onDelivered?: () => void
 }
 
 /** Shared state machine for the site's forms: values, validation, submission. */
-export function useFormSubmission<T extends { [K in keyof T]: string }>({
+export function useFormSubmission<T extends object>({
   initialValues,
   rules,
   submit,
@@ -29,8 +30,9 @@ export function useFormSubmission<T extends { [K in keyof T]: string }>({
   const [values, setValues] = useState<T>(initialValues)
   const [errors, setErrors] = useState<FormErrors<T>>({})
   const [status, setStatus] = useState<SubmitStatus>('idle')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const setField = (field: keyof T, value: string) => {
+  const setField = <K extends keyof T>(field: K, value: T[K]) => {
     setValues((current) => ({ ...current, [field]: value }))
     setErrors((current) => (current[field] ? { ...current, [field]: undefined } : current))
   }
@@ -49,6 +51,7 @@ export function useFormSubmission<T extends { [K in keyof T]: string }>({
     }
 
     setStatus('submitting')
+    setErrorMessage(null)
     try {
       const { delivered } = await submit(values)
       if (delivered) {
@@ -56,10 +59,17 @@ export function useFormSubmission<T extends { [K in keyof T]: string }>({
         onDelivered?.()
       }
       setStatus(delivered ? 'success' : 'preview')
-    } catch {
+    } catch (err) {
+      console.error('[Form Submission Error]:', err)
+      setErrorMessage(err instanceof Error ? err.message : 'Submission failed. Please try again.')
       setStatus('error')
     }
   }
 
-  return { values, errors, status, setField, handleSubmit }
+  const resetStatus = () => {
+    setStatus('idle')
+    setErrorMessage(null)
+  }
+
+  return { values, errors, status, errorMessage, setField, handleSubmit, resetStatus }
 }

@@ -2,26 +2,41 @@ import type { CareerApplicationValues } from '@/types/career'
 import type { ContactFormValues } from '@/types/contact'
 
 /** Returns an error message, or undefined when the value is valid. */
-export type Validator = (value: string) => string | undefined
+export type Validator<T = unknown> = (value: T) => string | undefined
 
-export type FormRules<T> = Partial<Record<keyof T, Validator[]>>
+export type FormRules<T> = {
+  [K in keyof T]?: Array<Validator<T[K]>>
+}
+
 export type FormErrors<T> = Partial<Record<keyof T, string>>
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const PHONE_PATTERN = /^\+?[\d\s().-]{7,20}$/
+const PHONE_PATTERN = /^\+?[\d\s().-]{7,25}$/
 
 export const required =
-  (label: string): Validator =>
+  (label: string): Validator<string> =>
   (value) =>
-    value.trim() ? undefined : `${label} is required.`
+    (typeof value === 'string' && value.trim()) ? undefined : `${label} is required.`
 
-export const email: Validator = (value) =>
-  !value.trim() || EMAIL_PATTERN.test(value.trim()) ? undefined : 'Enter a valid email address.'
+export const requiredCheckbox =
+  (label: string): Validator<boolean> =>
+  (value) =>
+    value === true ? undefined : `You must agree to the ${label}.`
 
-export const phone: Validator = (value) =>
-  !value.trim() || PHONE_PATTERN.test(value.trim()) ? undefined : 'Enter a valid phone number.'
+export const email: Validator<string> = (value) => {
+  if (typeof value !== 'string') return undefined
+  const trimmed = value.trim()
+  return !trimmed || EMAIL_PATTERN.test(trimmed) ? undefined : 'Enter a valid email address.'
+}
 
-export const url: Validator = (value) => {
+export const phone: Validator<string> = (value) => {
+  if (typeof value !== 'string') return undefined
+  const trimmed = value.trim()
+  return !trimmed || PHONE_PATTERN.test(trimmed) ? undefined : 'Enter a valid phone number.'
+}
+
+export const url: Validator<string> = (value) => {
+  if (typeof value !== 'string') return undefined
   const trimmed = value.trim()
   if (!trimmed) return undefined
   // Accept links typed without a scheme, e.g. "linkedin.com/in/yourname".
@@ -29,50 +44,50 @@ export const url: Validator = (value) => {
   try {
     new URL(candidate)
   } catch {
-    return 'Enter a valid link.'
+    return 'Enter a valid URL.'
   }
-  return candidate.includes('.') ? undefined : 'Enter a valid link.'
+  return candidate.includes('.') ? undefined : 'Enter a valid URL.'
 }
 
-/** A non-negative number no larger than `max`; empty passes (pair with `required`). */
-export const numberUpTo =
-  (max: number): Validator =>
-  (value) => {
-    const trimmed = value.trim()
-    if (!trimmed) return undefined
-    const amount = Number(trimmed)
-    return Number.isFinite(amount) && amount >= 0 && amount <= max
-      ? undefined
-      : `Enter a number between 0 and ${max}.`
-  }
-
 /*
- * Resume upload limits. The source does not specify them, so these are
- * conservative assumptions — change them here once the backend's limits are
- * known.
+ * Resume upload limits matching SecureXmotive_Resume_Upload_Form.pdf:
+ * PDF, DOC or DOCX • Maximum 5 MB
  */
 export const RESUME_EXTENSIONS = ['.pdf', '.doc', '.docx']
-export const RESUME_MAX_BYTES = 5 * 1024 * 1024
+export const RESUME_MIME_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+]
+export const RESUME_MAX_BYTES = 5 * 1024 * 1024 // 5 MB
 
 /** Returns an error message for a missing, mistyped or oversized resume. */
 export function validateResume(file: File | null): string | undefined {
-  if (!file) return 'Resume is required.'
+  if (!file) return 'Please attach your resume or CV.'
   const name = file.name.toLowerCase()
-  if (!RESUME_EXTENSIONS.some((extension) => name.endsWith(extension))) {
+  const hasValidExt = RESUME_EXTENSIONS.some((ext) => name.endsWith(ext))
+  if (!hasValidExt) {
     return 'Upload a PDF, DOC or DOCX file.'
   }
-  if (file.size > RESUME_MAX_BYTES) return 'The file is larger than 5 MB.'
+  if (file.size > RESUME_MAX_BYTES) {
+    return 'The file exceeds the maximum 5 MB limit.'
+  }
+  if (file.size === 0) {
+    return 'The selected file is empty.'
+  }
   return undefined
 }
 
 /** Runs every rule and returns the first error per field. */
-export function validateForm<T extends { [K in keyof T]: string }>(
+export function validateForm<T extends object>(
   values: T,
   rules: FormRules<T>,
 ): FormErrors<T> {
   const errors: FormErrors<T> = {}
   for (const field of Object.keys(rules) as Array<keyof T>) {
-    for (const validate of rules[field] ?? []) {
+    const fieldRules = rules[field]
+    if (!fieldRules) continue
+    for (const validate of fieldRules) {
       const message = validate(values[field])
       if (message) {
         errors[field] = message
@@ -83,25 +98,21 @@ export function validateForm<T extends { [K in keyof T]: string }>(
   return errors
 }
 
-/* Contact: required fields follow the asterisks in the design.
-   Career: required fields follow the client's specification (name, email,
-   phone, years of experience, resume); LinkedIn stays optional.
-   Message copy is not part of the design and can be reworded freely. */
-
+/* Validation rules matching PDF forms */
 export const contactFormRules: FormRules<ContactFormValues> = {
-  firstName: [required('First name')],
-  lastName: [required('Last name')],
+  fullName: [required('Full name')],
   email: [required('Business email'), email],
-  phone: [phone],
-  company: [required('Company')],
+  country: [required('Country / Region')],
+  industry: [required('Industry')],
   message: [required('Message')],
+  consent: [requiredCheckbox('Privacy Notice')],
 }
 
 export const careerFormRules: FormRules<CareerApplicationValues> = {
-  firstName: [required('First name')],
-  lastName: [required('Last name')],
+  fullName: [required('Full name')],
   email: [required('Email address'), email],
   phone: [required('Phone number'), phone],
+  currentLocation: [required('Current location')],
   linkedin: [url],
-  experience: [required('Years of experience'), numberUpTo(60)],
+  consent: [requiredCheckbox('Privacy Notice')],
 }

@@ -11,9 +11,14 @@ import type { Job } from '@/types/career'
 const APPLY_SECTION_ID = 'apply'
 
 export default function Careers() {
-  // The form state lives here so "Apply now" on a job can preselect its role.
   const form = useCareerForm()
-  const applyFor = (job: Job) => form.setField('role', job.title)
+  const applyFor = (_job: Job) => {
+    // Smooth scroll to apply section
+    const el = document.getElementById(APPLY_SECTION_ID)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
 
   return (
     <PageContainer title="Careers">
