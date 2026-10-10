@@ -33,7 +33,7 @@ export default function Careers() {
       <TechnicalTicker items={tickers.careersRoles} />
       <JobList applyTo={`#${APPLY_SECTION_ID}`} onApply={applyFor} />
       <TechnicalTicker items={tickers.careersCulture} tone="grey" />
-      <SubmitResume id={APPLY_SECTION_ID} form={form} />
+      {/* <SubmitResume id={APPLY_SECTION_ID} form={form} /> */}
     </PageContainer>
   )
 }

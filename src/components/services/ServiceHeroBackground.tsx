@@ -36,12 +36,12 @@ export default function ServiceHeroBackground({ videoSrc }: ServiceHeroBackgroun
         loop
         playsInline
         preload="auto"
-        className="absolute inset-0 size-full object-cover object-center motion-reduce:hidden opacity-40"
+        className="absolute inset-0 size-full object-cover object-center motion-reduce:hidden opacity-70"
       >
         <source src={videoSrc} type="video/mp4" />
       </video>
       {/* Base wash for high-contrast text readability */}
-      <div className="absolute inset-0 bg-cyber-bg/60 backdrop-blur-[0.5px]" />
+      <div className="absolute inset-0 bg-cyber-bg/45 backdrop-blur-[0.5px]" />
       {/* Radial vignette focused behind title and badge */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_85%_75%_at_50%_40%,rgba(18,18,18,0.25)_0%,rgba(18,18,18,0.85)_100%)]" />
       {/* Top and bottom linear gradient fades */}
