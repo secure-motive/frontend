@@ -64,7 +64,7 @@ export default function AdminLayout() {
         </main>
 
         <footer className="border-t border-white/5 py-4 px-6 text-center font-code text-3xs text-cyber-muted/60">
-          SecureXmotive Internal Administration Console · Phase 1 Mock Preview · Confidential
+          SecureXmotive Internal Administration Console · Confidential
         </footer>
       </div>
     </div>

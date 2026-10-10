@@ -9,4 +9,6 @@ export interface Video {
   thumbnailUrl?: string
   /** ISO date or date-time. */
   publishedAt?: string
+  /** Display order (lower numbers come first). */
+  order?: number
 }

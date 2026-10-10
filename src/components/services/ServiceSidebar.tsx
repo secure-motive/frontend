@@ -18,17 +18,17 @@ export default function ServiceSidebar({ domain }: { domain: ServiceDomain }) {
       <Card interactive className="p-6">
         <SectionLabel as="h2">Services</SectionLabel>
         <ul className="mt-4 flex flex-col gap-2.5 text-sm">
-          {domain.items.map((item) => (
-            <li key={item.slug} className="flex items-start gap-2">
+          {domain.servicesList.map((service, idx) => (
+            <li key={idx} className="flex items-start gap-2">
               <span
                 aria-hidden="true"
                 className="mt-1.75 size-1.5 shrink-0 rounded-full bg-cyber-orange"
               />
               <Link
-                to={{ hash: item.slug }}
+                to={{ hash: 'services-list' }}
                 className="text-cyber-muted transition-colors hover:text-cyber-teal"
               >
-                {item.title}
+                {service}
               </Link>
             </li>
           ))}

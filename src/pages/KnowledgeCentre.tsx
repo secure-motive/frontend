@@ -33,13 +33,13 @@ export default function KnowledgeCentre() {
       />
       {/* The design leaves an empty 37px band between the hero and the tab bar. */}
       <div aria-hidden="true" className="h-9.25" />
-      <KnowledgeTabs active={active} onChange={selectTab} />
+      {/* <KnowledgeTabs active={active} onChange={selectTab} /> */}
 
       <Container className="pt-16 pb-14.5">
         <div role="tabpanel" id={tabPanelId(active)} aria-labelledby={tabButtonId(active)}>
-          {active === 'articles' && <ArticleList />}
-          {active === 'videos' && <VideoList />}
-          {active === 'reports' && <ReportList />}
+          {/* {active === 'articles' && <ArticleList />} */}
+          {/* {active === 'videos' && <VideoList />} */}
+          {/* {active === 'reports' && <ReportList />} */}
         </div>
       </Container>
     </PageContainer>

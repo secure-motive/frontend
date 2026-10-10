@@ -9,13 +9,14 @@ import { ArrowLeftIcon, AlertTriangleIcon, CheckIcon } from '../components/Admin
 
 export default function AdminVideoNew() {
   const navigate = useNavigate()
-  const { addVideo } = useAdminData()
+  const { addVideo, videos } = useAdminData()
   const { showToast } = useAdminToast()
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [isPublished, setIsPublished] = useState(true)
+  const [order, setOrder] = useState<number | string>(videos.length + 1)
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
   const [isSaving, setIsSaving] = useState(false)
@@ -53,11 +54,13 @@ export default function AdminVideoNew() {
 
     setIsSaving(true)
     try {
+      const parsedOrder = Number(order)
       const newVideo = await addVideo({
         title,
         description,
         youtubeUrl,
         isPublished,
+        order: !isNaN(parsedOrder) && parsedOrder > 0 ? parsedOrder : videos.length + 1,
       })
 
       showToast('Video Created Successfully', {
@@ -203,6 +206,33 @@ export default function AdminVideoNew() {
                   {errors.description}
                 </p>
               )}
+            </div>
+
+            {/* Display Order / Priority */}
+            <div className="rounded-lg border border-white/10 bg-[#141414] p-4">
+              <label
+                htmlFor="video-order-input"
+                className="font-display text-sm font-bold text-white block"
+              >
+                Display Order / Priority
+              </label>
+              <p className="font-body text-xs text-cyber-muted mt-0.5 mb-3">
+                Determines sequence on the Knowledge Centre video page. Lower numbers appear first (e.g. 1 is top/first).
+              </p>
+              <div className="flex items-center gap-3">
+                <input
+                  id="video-order-input"
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={order}
+                  onChange={(e) => setOrder(e.target.value)}
+                  className="w-28 rounded-lg border border-cyber-teal/20 bg-cyber-field px-3.5 py-2 font-code text-sm text-cyber-value focus:border-cyber-teal/60 focus:ring-2 focus:ring-cyber-teal/20 focus:outline-none"
+                />
+                <span className="font-code text-2xs text-cyber-teal">
+                  Position #{order || 1}
+                </span>
+              </div>
             </div>
 
             {/* Published Toggle */}

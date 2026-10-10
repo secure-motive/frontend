@@ -70,6 +70,8 @@ export function mapFirestoreVideo(
   const isPublished = Boolean(data.isPublished ?? data.published ?? false)
   const createdAt = parseFirestoreVideoDate(data.createdAt || data.submittedAt)
   const updatedAt = parseFirestoreVideoDate(data.updatedAt || data.createdAt)
+  const rawOrder = data.order !== undefined ? Number(data.order) : (data.displayOrder !== undefined ? Number(data.displayOrder) : undefined)
+  const order = typeof rawOrder === 'number' && !isNaN(rawOrder) ? rawOrder : undefined
 
   return {
     id: docSnap.id,
@@ -78,6 +80,7 @@ export function mapFirestoreVideo(
     youtubeUrl,
     thumbnailUrl: String(data.thumbnailUrl || data.thumbnail || getYoutubeThumbnail(youtubeUrl) || ''),
     isPublished,
+    order,
     createdAt,
     updatedAt,
   }
@@ -116,8 +119,15 @@ export const firestoreVideoService = {
 
     const videos = snapshot.docs.map((docSnap) => mapFirestoreVideo(docSnap))
 
-    // Client-side sort by update date descending
-    videos.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    // Client-side sort by order ascending (1, 2, 3...), then update date descending
+    videos.sort((a, b) => {
+      const orderA = a.order !== undefined && a.order !== null ? a.order : Number.MAX_SAFE_INTEGER
+      const orderB = b.order !== undefined && b.order !== null ? b.order : Number.MAX_SAFE_INTEGER
+      if (orderA !== orderB) {
+        return orderA - orderB
+      }
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    })
 
     return {
       videos,
@@ -156,6 +166,7 @@ export const firestoreVideoService = {
     const youtubeUrl = values.youtubeUrl.trim()
     const isPublished = Boolean(values.isPublished)
     const thumbnailUrl = getYoutubeThumbnail(youtubeUrl) || ''
+    const order = values.order !== undefined && !isNaN(Number(values.order)) ? Number(values.order) : 1
 
     const colRef = collection(db, VIDEOS_COLLECTION)
     const docRef = await addDoc(colRef, {
@@ -165,6 +176,7 @@ export const firestoreVideoService = {
       thumbnailUrl,
       isPublished,
       published: isPublished,
+      order,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     })
@@ -177,6 +189,7 @@ export const firestoreVideoService = {
       youtubeUrl,
       thumbnailUrl: thumbnailUrl || undefined,
       isPublished,
+      order,
       createdAt: nowIso,
       updatedAt: nowIso,
     }
@@ -205,11 +218,34 @@ export const firestoreVideoService = {
       updateData.isPublished = values.isPublished
       updateData.published = values.isPublished
     }
+    if (values.order !== undefined) {
+      const numOrder = Number(values.order)
+      updateData.order = isNaN(numOrder) ? 1 : numOrder
+    }
 
     const docRef = doc(db, VIDEOS_COLLECTION, id)
     await updateDoc(docRef, updateData)
 
     return this.getVideoById(id)
+  },
+
+  /**
+   * Batch reorder videos by updating order field for multiple videos.
+   */
+  async reorderVideos(videoOrders: { id: string; order: number }[]): Promise<void> {
+    if (!auth.currentUser) {
+      throw new Error('You are not authenticated with Firebase. Please sign in again.')
+    }
+
+    const promises = videoOrders.map(({ id, order }) => {
+      const docRef = doc(db, VIDEOS_COLLECTION, id)
+      return updateDoc(docRef, {
+        order,
+        updatedAt: serverTimestamp(),
+      })
+    })
+
+    await Promise.all(promises)
   },
 
   /**
@@ -277,6 +313,8 @@ export const firestoreVideoService = {
 
       const publishedAt = parseFirestoreVideoDate(data.createdAt || data.updatedAt)
       const derivedThumbnail = String(data.thumbnailUrl || data.thumbnail || getYoutubeThumbnail(youtubeUrl) || '')
+      const rawOrder = data.order !== undefined ? Number(data.order) : (data.displayOrder !== undefined ? Number(data.displayOrder) : undefined)
+      const order = typeof rawOrder === 'number' && !isNaN(rawOrder) ? rawOrder : undefined
 
       videos.push({
         id: docSnap.id,
@@ -285,11 +323,17 @@ export const firestoreVideoService = {
         youtubeUrl,
         thumbnailUrl: derivedThumbnail || undefined,
         publishedAt,
+        order,
       })
     }
 
-    // Sort by publication/creation date descending (newest first)
+    // Sort by order ascending (1, 2, 3...), then by publication/creation date descending
     videos.sort((a, b) => {
+      const orderA = a.order !== undefined && a.order !== null ? a.order : Number.MAX_SAFE_INTEGER
+      const orderB = b.order !== undefined && b.order !== null ? b.order : Number.MAX_SAFE_INTEGER
+      if (orderA !== orderB) {
+        return orderA - orderB
+      }
       const timeA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0
       const timeB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0
       return timeB - timeA

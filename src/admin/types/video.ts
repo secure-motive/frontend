@@ -5,6 +5,7 @@ export interface AdminVideo {
   youtubeUrl: string
   thumbnailUrl?: string
   isPublished: boolean
+  order?: number
   createdAt: string // ISO string
   updatedAt: string // ISO string
 }
@@ -14,4 +15,5 @@ export interface VideoFormValues {
   description: string
   youtubeUrl: string
   isPublished: boolean
+  order?: number
 }

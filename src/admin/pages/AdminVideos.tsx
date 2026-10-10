@@ -10,13 +10,23 @@ import {
   EditIcon,
   TrashIcon,
   ExternalLinkIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
 } from '../components/AdminIcons'
 import { PlusIcon } from '@/components/common/icons'
 import { formatDate } from '@/utils/helpers'
 import type { AdminVideo } from '../types/video'
 
 export default function AdminVideos() {
-  const { videos, isLoading, error, refreshAll, deleteVideo, toggleVideoPublish } = useAdminData()
+  const {
+    videos,
+    isLoading,
+    error,
+    refreshAll,
+    deleteVideo,
+    toggleVideoPublish,
+    reorderVideos,
+  } = useAdminData()
   const { showToast } = useAdminToast()
 
   const [searchQuery, setSearchQuery] = useState('')
@@ -24,6 +34,7 @@ export default function AdminVideos() {
   const [videoToDelete, setVideoToDelete] = useState<AdminVideo | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [reorderingId, setReorderingId] = useState<string | null>(null)
 
   const filteredVideos = useMemo(() => {
     let result = [...videos]
@@ -44,8 +55,15 @@ export default function AdminVideos() {
       )
     }
 
-    // Sort by updated date descending
-    result.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    // Sort primarily by configured display order ascending, then by updated date descending
+    result.sort((a, b) => {
+      const orderA = a.order !== undefined && a.order !== null ? a.order : Number.MAX_SAFE_INTEGER
+      const orderB = b.order !== undefined && b.order !== null ? b.order : Number.MAX_SAFE_INTEGER
+      if (orderA !== orderB) {
+        return orderA - orderB
+      }
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    })
 
     return result
   }, [videos, searchQuery, statusFilter])
@@ -68,6 +86,40 @@ export default function AdminVideos() {
       })
     } finally {
       setTogglingId(null)
+    }
+  }
+
+  const handleMoveOrder = async (currentIndex: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+    if (targetIndex < 0 || targetIndex >= filteredVideos.length) return
+
+    const currentVideo = filteredVideos[currentIndex]
+    const targetVideo = filteredVideos[targetIndex]
+    if (!currentVideo || !targetVideo) return
+
+    setReorderingId(currentVideo.id)
+    try {
+      const reorderedList = [...filteredVideos]
+      reorderedList[currentIndex] = targetVideo
+      reorderedList[targetIndex] = currentVideo
+
+      const updates = reorderedList.map((item, idx) => ({
+        id: item.id,
+        order: idx + 1,
+      }))
+
+      await reorderVideos(updates)
+      showToast('Video Order Updated', {
+        detail: `"${currentVideo.title.slice(0, 35)}..." moved to position #${targetIndex + 1}.`,
+        type: 'success',
+      })
+    } catch (err) {
+      showToast('Reorder Failed', {
+        detail: err instanceof Error ? err.message : 'Failed to update video sequence.',
+        type: 'error',
+      })
+    } finally {
+      setReorderingId(null)
     }
   }
 
@@ -117,7 +169,7 @@ export default function AdminVideos() {
             Video Management
           </h1>
           <p className="mt-1 font-body text-xs sm:text-sm text-cyber-muted">
-            Manage cybersecurity tutorials, threat briefings, and video broadcasts.
+            Manage cybersecurity tutorials, threat briefings, and adjust display sequence.
           </p>
         </div>
 
@@ -178,7 +230,8 @@ export default function AdminVideos() {
           <table className="w-full text-left border-collapse" aria-label="Videos table">
             <thead>
               <tr className="border-b border-white/10 bg-[#1a1a1a] font-code text-2xs uppercase tracking-widest text-cyber-muted">
-                <th scope="col" className="py-3.5 pl-6 pr-4">Video</th>
+                <th scope="col" className="py-3.5 pl-6 pr-2 text-center w-20">Order</th>
+                <th scope="col" className="py-3.5 px-4">Video</th>
                 <th scope="col" className="py-3.5 px-4">Status</th>
                 <th scope="col" className="py-3.5 px-4">Last Updated</th>
                 <th scope="col" className="py-3.5 pl-4 pr-6 text-right">Actions</th>
@@ -187,7 +240,7 @@ export default function AdminVideos() {
             <tbody className="divide-y divide-white/5 font-body text-xs">
               {isLoading && videos.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-12 text-center text-cyber-muted">
+                  <td colSpan={5} className="py-12 text-center text-cyber-muted">
                     <p className="font-display text-base font-semibold text-white animate-pulse">
                       Loading videos...
                     </p>
@@ -195,7 +248,7 @@ export default function AdminVideos() {
                 </tr>
               ) : videos.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-12 text-center text-cyber-muted">
+                  <td colSpan={5} className="py-12 text-center text-cyber-muted">
                     <p className="font-display text-base font-semibold text-white">
                       No videos found
                     </p>
@@ -211,7 +264,7 @@ export default function AdminVideos() {
                 </tr>
               ) : filteredVideos.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-12 text-center text-cyber-muted">
+                  <td colSpan={5} className="py-12 text-center text-cyber-muted">
                     <p className="font-display text-base font-semibold text-white">
                       No matching videos
                     </p>
@@ -221,114 +274,151 @@ export default function AdminVideos() {
                   </td>
                 </tr>
               ) : (
-                filteredVideos.map((video) => (
-                  <tr
-                    key={video.id}
-                    className="hover:bg-white/[0.02] transition-colors"
-                  >
-                    {/* Video Info (Thumbnail + Title + Description) */}
-                    <td className="py-4 pl-6 pr-4">
-                      <div className="flex items-start gap-4">
-                        {/* Thumbnail */}
-                        <div className="relative size-16 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-[#1e1e1e]">
-                          {video.thumbnailUrl ? (
-                            <img
-                              src={video.thumbnailUrl}
-                              alt={video.title}
-                              className="size-full object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="flex size-full items-center justify-center font-code text-3xs text-cyber-muted">
-                              NO THUMB
-                            </div>
-                          )}
-                        </div>
+                filteredVideos.map((video, index) => {
+                  const isFirst = index === 0
+                  const isLast = index === filteredVideos.length - 1
+                  const isBusy = reorderingId !== null || Boolean(searchQuery.trim())
 
-                        {/* Text info */}
-                        <div className="min-w-0 flex-1">
-                          <Link
-                            to={`/admin/videos/${video.id}/edit`}
-                            className="font-display text-sm font-bold text-white hover:text-cyber-teal transition-colors line-clamp-1"
+                  return (
+                    <tr
+                      key={video.id}
+                      className="hover:bg-white/[0.02] transition-colors"
+                    >
+                      {/* Order Column with Up / Down Controls */}
+                      <td className="py-4 pl-6 pr-2 text-center">
+                        <div className="flex flex-col items-center justify-center gap-1">
+                          <button
+                            type="button"
+                            disabled={isFirst || isBusy}
+                            onClick={() => handleMoveOrder(index, 'up')}
+                            className="rounded p-1 text-cyber-muted hover:bg-white/10 hover:text-cyber-teal disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-cyber-muted transition-colors"
+                            title={isFirst ? 'Top position' : 'Move video up (earlier sequence)'}
+                            aria-label={`Move ${video.title} up`}
                           >
-                            {video.title}
-                          </Link>
-                          {video.description && (
-                            <p className="mt-0.5 font-body text-xs text-cyber-muted line-clamp-1">
-                              {video.description}
-                            </p>
-                          )}
-                          <div className="mt-1 flex items-center gap-2">
-                            <a
-                              href={video.youtubeUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 font-code text-3xs text-cyber-teal hover:underline truncate max-w-[280px]"
+                            <ChevronUpIcon className="size-3.5" />
+                          </button>
+
+                          <span className="flex size-6 items-center justify-center rounded-md border border-white/10 bg-[#121212] font-code text-2xs font-bold text-cyber-teal" title={`Display sequence #${index + 1}`}>
+                            {index + 1}
+                          </span>
+
+                          <button
+                            type="button"
+                            disabled={isLast || isBusy}
+                            onClick={() => handleMoveOrder(index, 'down')}
+                            className="rounded p-1 text-cyber-muted hover:bg-white/10 hover:text-cyber-teal disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-cyber-muted transition-colors"
+                            title={isLast ? 'Bottom position' : 'Move video down (later sequence)'}
+                            aria-label={`Move ${video.title} down`}
+                          >
+                            <ChevronDownIcon className="size-3.5" />
+                          </button>
+                        </div>
+                      </td>
+
+                      {/* Video Info (Thumbnail + Title + Description) */}
+                      <td className="py-4 px-4">
+                        <div className="flex items-start gap-4">
+                          {/* Thumbnail */}
+                          <div className="relative size-16 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-[#1e1e1e]">
+                            {video.thumbnailUrl ? (
+                              <img
+                                src={video.thumbnailUrl}
+                                alt={video.title}
+                                className="size-full object-cover"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="flex size-full items-center justify-center font-code text-3xs text-cyber-muted">
+                                NO THUMB
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Text info */}
+                          <div className="min-w-0 flex-1">
+                            <Link
+                              to={`/admin/videos/${video.id}/edit`}
+                              className="font-display text-sm font-bold text-white hover:text-cyber-teal transition-colors line-clamp-1"
                             >
-                              <span>{video.youtubeUrl}</span>
-                              <ExternalLinkIcon className="size-3 shrink-0" />
-                            </a>
+                              {video.title}
+                            </Link>
+                            {video.description && (
+                              <p className="mt-0.5 font-body text-xs text-cyber-muted line-clamp-1">
+                                {video.description}
+                              </p>
+                            )}
+                            <div className="mt-1 flex items-center gap-2">
+                              <a
+                                href={video.youtubeUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 font-code text-3xs text-cyber-teal hover:underline truncate max-w-[280px]"
+                              >
+                                <span>{video.youtubeUrl}</span>
+                                <ExternalLinkIcon className="size-3 shrink-0" />
+                              </a>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* Status Toggle */}
-                    <td className="py-4 px-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2.5">
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked={video.isPublished}
-                          disabled={togglingId === video.id}
-                          onClick={() => handleTogglePublish(video)}
-                          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-cyber-teal disabled:opacity-50 ${
-                            video.isPublished ? 'bg-cyber-teal' : 'bg-white/15'
-                          }`}
-                          title={video.isPublished ? 'Click to set to Draft' : 'Click to Publish'}
-                        >
-                          <span
-                            aria-hidden="true"
-                            className={`pointer-events-none inline-block size-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                              video.isPublished ? 'translate-x-4' : 'translate-x-0'
+                      {/* Status Toggle */}
+                      <td className="py-4 px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2.5">
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={video.isPublished}
+                            disabled={togglingId === video.id}
+                            onClick={() => handleTogglePublish(video)}
+                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-cyber-teal disabled:opacity-50 ${
+                              video.isPublished ? 'bg-cyber-teal' : 'bg-white/15'
                             }`}
-                          />
-                        </button>
-                        <AdminBadge tone={video.isPublished ? 'teal' : 'muted'}>
-                          {video.isPublished ? 'Published' : 'Draft'}
-                        </AdminBadge>
-                      </div>
-                    </td>
+                            title={video.isPublished ? 'Click to set to Draft' : 'Click to Publish'}
+                          >
+                            <span
+                              aria-hidden="true"
+                              className={`pointer-events-none inline-block size-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                                video.isPublished ? 'translate-x-4' : 'translate-x-0'
+                              }`}
+                            />
+                          </button>
+                          <AdminBadge tone={video.isPublished ? 'teal' : 'muted'}>
+                            {video.isPublished ? 'Published' : 'Draft'}
+                          </AdminBadge>
+                        </div>
+                      </td>
 
-                    {/* Last Updated */}
-                    <td className="py-4 px-4 font-code text-2xs text-cyber-muted whitespace-nowrap">
-                      {formatDate(video.updatedAt)}
-                    </td>
+                      {/* Last Updated */}
+                      <td className="py-4 px-4 font-code text-2xs text-cyber-muted whitespace-nowrap">
+                        {formatDate(video.updatedAt)}
+                      </td>
 
-                    {/* Actions */}
-                    <td className="py-4 pl-4 pr-6 text-right whitespace-nowrap">
-                      <div className="inline-flex items-center gap-2">
-                        <AdminButton
-                          to={`/admin/videos/${video.id}/edit`}
-                          variant="outline"
-                          size="xs"
-                          icon={<EditIcon className="size-3" />}
-                        >
-                          Edit
-                        </AdminButton>
-                        <button
-                          type="button"
-                          onClick={() => setVideoToDelete(video)}
-                          className="rounded-lg border border-red-500/20 bg-red-500/10 p-1.5 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors"
-                          title="Delete video"
-                          aria-label={`Delete video ${video.title}`}
-                        >
-                          <TrashIcon className="size-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      {/* Actions */}
+                      <td className="py-4 pl-4 pr-6 text-right whitespace-nowrap">
+                        <div className="inline-flex items-center gap-2">
+                          <AdminButton
+                            to={`/admin/videos/${video.id}/edit`}
+                            variant="outline"
+                            size="xs"
+                            icon={<EditIcon className="size-3" />}
+                          >
+                            Edit
+                          </AdminButton>
+                          <button
+                            type="button"
+                            onClick={() => setVideoToDelete(video)}
+                            className="rounded-lg border border-red-500/20 bg-red-500/10 p-1.5 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors"
+                            title="Delete video"
+                            aria-label={`Delete video ${video.title}`}
+                          >
+                            <TrashIcon className="size-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
               )}
             </tbody>
           </table>
@@ -336,7 +426,7 @@ export default function AdminVideos() {
 
         {/* Footer info bar */}
         <div className="flex items-center justify-between border-t border-white/5 px-6 py-3 font-code text-2xs text-cyber-muted">
-          <span>Showing {filteredVideos.length} of {videos.length} videos</span>
+          <span>Showing {filteredVideos.length} of {videos.length} videos (Ordered by display sequence)</span>
           <span>Cloud Firestore Integrated</span>
         </div>
       </div>

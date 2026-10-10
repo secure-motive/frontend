@@ -30,6 +30,7 @@ export interface AdminDataContextValue {
   updateVideo: (id: string, values: Partial<VideoFormValues>) => Promise<AdminVideo | null>
   deleteVideo: (id: string) => Promise<boolean>
   toggleVideoPublish: (id: string) => Promise<boolean>
+  reorderVideos: (videoOrders: { id: string; order: number }[]) => Promise<void>
 
   // Applications & Messages backend actions
   deleteApplication: (id: string) => Promise<boolean>
@@ -39,9 +40,6 @@ export interface AdminDataContextValue {
   // Local & Firestore UI status helpers
   markMessageAsRead: (id: string) => Promise<void> | void
   updateApplicationStatus: (id: string, status: ApplicationStatus) => Promise<void> | void
-
-  // Reset / reload
-  resetAllData: () => void
 }
 
 export const AdminDataContext = createContext<AdminDataContextValue | null>(null)

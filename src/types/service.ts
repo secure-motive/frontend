@@ -28,7 +28,14 @@ export interface ServiceItem {
   /** Also the anchor id of its section on the domain page. */
   slug: string
   title: string
-  points: TechnicalPoint[]
+  points?: TechnicalPoint[]
+}
+
+/** Closing section with heading, paragraphs, and company slogan */
+export interface ClosingSection {
+  title: string
+  paragraphs: string[]
+  slogan: string
 }
 
 /** One of the five service domains. Each has its own page at /services/:slug. */
@@ -42,15 +49,22 @@ export interface ServiceDomain {
   /** Display name used in titles and navigation. */
   name: string
   accent: ServiceAccent
-  /** Short description for the Services row. Not supplied yet. */
+  /** Short description for the Services row. */
   summary?: string
-  /** Italic one-line statement under the page title. Not supplied yet. */
-  tagline?: string
-  /** Opening paragraph of the domain page. Not supplied yet. */
-  intro?: string
+  /** Tagline statement under the page title matching the PDF. */
+  tagline: string
+  /** Opening paragraphs of the domain page matching the PDF verbatim. */
+  intro: string
   /** Background video source, e.g. /gifs/agriculture.mp4 */
   video?: string
+  /** Heading for the services bullet list from the PDF */
+  servicesHeading: string
+  /** Exact services bullet points from the PDF */
+  servicesList: string[]
+  /** Closing section with heading, paragraphs, and slogan */
+  closingSection: ClosingSection
   items: ServiceItem[]
   /** Standards and protocols the domain's own content names. */
   standards: string[]
 }
+

@@ -20,7 +20,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ onCloseMobile }: AdminSidebarProps) {
   const { user, logout } = useAdminAuth()
-  const { stats, resetAllData } = useAdminData()
+  const { stats, refreshAll } = useAdminData()
   const { showToast } = useAdminToast()
 
   const navItems = [
@@ -53,15 +53,20 @@ export function AdminSidebar({ onCloseMobile }: AdminSidebarProps) {
     },
   ]
 
-  const handleResetData = () => {
-    if (window.confirm('Reset all mock admin data back to original default records?')) {
-      resetAllData()
-      showToast('Mock data reset to initial state', {
-        detail: 'Applications, messages, and videos restored to defaults.',
-        type: 'info',
+  const handleRefreshData = async () => {
+    try {
+      await refreshAll()
+      showToast('Data refreshed', {
+        detail: 'Dashboard, applications, messages, and videos synchronized.',
+        type: 'success',
       })
-      if (onCloseMobile) onCloseMobile()
+    } catch {
+      showToast('Refresh failed', {
+        detail: 'Could not sync data from server.',
+        type: 'error',
+      })
     }
+    if (onCloseMobile) onCloseMobile()
   }
 
   return (
@@ -76,7 +81,7 @@ export function AdminSidebar({ onCloseMobile }: AdminSidebarProps) {
             Admin Portal
           </span>
           <span className="font-code text-3xs text-cyber-muted tracking-wide">
-            Phase 1 · Mock
+            Live Console
           </span>
         </div>
       </div>
@@ -127,11 +132,11 @@ export function AdminSidebar({ onCloseMobile }: AdminSidebarProps) {
 
         <button
           type="button"
-          onClick={handleResetData}
+          onClick={handleRefreshData}
           className="flex w-full items-center gap-3 rounded-lg px-3.5 py-2.5 font-code text-xs tracking-wider text-cyber-muted transition-colors hover:bg-white/5 hover:text-white"
         >
           <RefreshCwIcon className="size-4 shrink-0 text-cyber-teal/80" />
-          <span>Reset Mock Data</span>
+          <span>Refresh Data</span>
         </button>
 
         <a

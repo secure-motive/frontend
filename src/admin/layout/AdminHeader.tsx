@@ -37,7 +37,7 @@ export function AdminHeader({ onOpenMobileMenu }: AdminHeaderProps) {
       <div className="flex items-center gap-3">
         <span className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-cyber-teal/30 bg-cyber-teal/10 px-3 py-1 font-code text-3xs tracking-widest text-cyber-teal uppercase">
           <span className="size-1.5 rounded-full bg-cyber-teal animate-pulse" />
-          Mock Environment
+          Live System
         </span>
 
         <a
