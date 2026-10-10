@@ -34,7 +34,7 @@ export default function ServiceItemSection({ item }: { item: ServiceItem }) {
         {item.title}
       </h2>
       <div className="mt-3 flex flex-col gap-5">
-        {item.points.map((point) => (
+        {item.points?.map((point) => (
           <div key={point.title}>
             <h3 className="font-display font-semibold tracking-wide text-white">{point.title}</h3>
             <div className="mt-1 flex flex-col gap-2 leading-relaxed text-cyber-muted">

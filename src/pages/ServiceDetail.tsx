@@ -1,5 +1,4 @@
 import { useParams } from 'react-router'
-import Card from '@/components/common/Card'
 import Container from '@/components/common/Container'
 import PageContainer from '@/components/layout/PageContainer'
 import ServiceDetailHero from '@/components/services/ServiceDetailHero'

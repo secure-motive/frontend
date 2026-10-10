@@ -39,9 +39,6 @@ export interface AdminDataContextValue {
   // Local & Firestore UI status helpers
   markMessageAsRead: (id: string) => Promise<void> | void
   updateApplicationStatus: (id: string, status: ApplicationStatus) => Promise<void> | void
-
-  // Reset / reload
-  resetAllData: () => void
 }
 
 export const AdminDataContext = createContext<AdminDataContextValue | null>(null)

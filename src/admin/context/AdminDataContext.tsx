@@ -285,10 +285,6 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     setApplications((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)))
   }, [])
 
-  const resetAllData = useCallback(() => {
-    refreshAll()
-  }, [refreshAll])
-
   return (
     <AdminDataContext.Provider
       value={{
@@ -314,7 +310,6 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
         getResumeDownloadUrl,
         markMessageAsRead,
         updateApplicationStatus,
-        resetAllData,
       }}
     >
       {children}

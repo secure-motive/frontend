@@ -12,7 +12,7 @@ const page = (load: () => Promise<{ default: ComponentType }>) => async () => ({
 })
 
 export const router = createBrowserRouter([
-  // Admin Portal (Phase 1 Mock)
+  // Admin Portal
   {
     path: '/admin',
     element: <AdminRootWrapper />,

@@ -14,7 +14,7 @@ export const ROUTES = {
   privacyPolicy: '/privacy-policy',
   termsOfService: '/terms-of-service',
   securityDisclosure: '/security-disclosure',
-  // Admin Portal (Phase 1 Mock)
+  // Admin Portal
   admin: '/admin',
   adminLogin: '/admin/login',
   adminApplications: '/admin/applications',
