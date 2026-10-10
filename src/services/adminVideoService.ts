@@ -69,4 +69,11 @@ export const adminVideoService = {
   async unpublishVideo(id: string): Promise<AdminVideo> {
     return firestoreVideoService.unpublishVideo(id)
   },
+
+  /**
+   * Reorder videos in Cloud Firestore.
+   */
+  async reorderVideos(videoOrders: { id: string; order: number }[]): Promise<void> {
+    return firestoreVideoService.reorderVideos(videoOrders)
+  },
 }

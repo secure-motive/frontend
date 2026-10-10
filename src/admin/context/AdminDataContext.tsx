@@ -218,14 +218,32 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
   // Video CRUD actions connected to Cloud Firestore
   const addVideo = useCallback(async (values: VideoFormValues): Promise<AdminVideo> => {
     const created = await adminVideoService.createVideo(values)
-    setVideos((prev) => [created, ...prev.filter((v) => v.id !== created.id)])
+    setVideos((prev) => {
+      const next = [created, ...prev.filter((v) => v.id !== created.id)]
+      next.sort((a, b) => {
+        const orderA = a.order !== undefined && a.order !== null ? a.order : Number.MAX_SAFE_INTEGER
+        const orderB = b.order !== undefined && b.order !== null ? b.order : Number.MAX_SAFE_INTEGER
+        if (orderA !== orderB) return orderA - orderB
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      })
+      return next
+    })
     return created
   }, [])
 
   const updateVideo = useCallback(
     async (id: string, values: Partial<VideoFormValues>): Promise<AdminVideo | null> => {
       const updated = await adminVideoService.updateVideo(id, values)
-      setVideos((prev) => prev.map((v) => (v.id === id ? updated : v)))
+      setVideos((prev) => {
+        const next = prev.map((v) => (v.id === id ? updated : v))
+        next.sort((a, b) => {
+          const orderA = a.order !== undefined && a.order !== null ? a.order : Number.MAX_SAFE_INTEGER
+          const orderB = b.order !== undefined && b.order !== null ? b.order : Number.MAX_SAFE_INTEGER
+          if (orderA !== orderB) return orderA - orderB
+          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        })
+        return next
+      })
       return updated
     },
     [],
@@ -251,6 +269,32 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
       return updated.isPublished
     },
     [videos],
+  )
+
+  const reorderVideos = useCallback(
+    async (videoOrders: { id: string; order: number }[]): Promise<void> => {
+      // Optimistically update local videos state
+      setVideos((prev) => {
+        const orderMap = new Map(videoOrders.map((item) => [item.id, item.order]))
+        const updated = prev.map((v) => {
+          if (orderMap.has(v.id)) {
+            return { ...v, order: orderMap.get(v.id)! }
+          }
+          return v
+        })
+        updated.sort((a, b) => {
+          const orderA = a.order !== undefined && a.order !== null ? a.order : Number.MAX_SAFE_INTEGER
+          const orderB = b.order !== undefined && b.order !== null ? b.order : Number.MAX_SAFE_INTEGER
+          if (orderA !== orderB) return orderA - orderB
+          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        })
+        return updated
+      })
+
+      // Persist to Cloud Firestore
+      await adminVideoService.reorderVideos(videoOrders)
+    },
+    [],
   )
 
   // Applications & Messages actions
@@ -305,6 +349,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
         updateVideo,
         deleteVideo,
         toggleVideoPublish,
+        reorderVideos,
         deleteApplication,
         deleteMessage,
         getResumeDownloadUrl,

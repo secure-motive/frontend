@@ -21,6 +21,7 @@ function VideoEditForm({ video }: VideoEditFormProps) {
   const [description, setDescription] = useState(video.description)
   const [youtubeUrl, setYoutubeUrl] = useState(video.youtubeUrl)
   const [isPublished, setIsPublished] = useState(video.isPublished)
+  const [order, setOrder] = useState<number | string>(video.order ?? 1)
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
   const [isSaving, setIsSaving] = useState(false)
@@ -58,11 +59,13 @@ function VideoEditForm({ video }: VideoEditFormProps) {
 
     setIsSaving(true)
     try {
+      const parsedOrder = Number(order)
       const updated = await updateVideo(video.id, {
         title,
         description,
         youtubeUrl,
         isPublished,
+        order: !isNaN(parsedOrder) && parsedOrder > 0 ? parsedOrder : 1,
       })
 
       if (updated) {
@@ -181,6 +184,30 @@ function VideoEditForm({ video }: VideoEditFormProps) {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Display Order / Priority */}
+      <div className="rounded-xl border border-white/10 bg-[#141414] p-4">
+        <label htmlFor="edit-video-order" className="font-display text-sm font-bold text-white block">
+          Display Order / Priority
+        </label>
+        <p className="font-body text-xs text-cyber-muted mt-0.5 mb-3">
+          Determines video sequence on the Knowledge Centre page. Lower numbers appear first (e.g. 1 is top/first).
+        </p>
+        <div className="flex items-center gap-3">
+          <input
+            id="edit-video-order"
+            type="number"
+            min={1}
+            step={1}
+            value={order}
+            onChange={(e) => setOrder(e.target.value)}
+            className="w-28 rounded-lg border border-white/10 bg-[#161616] px-3.5 py-2 font-code text-sm text-white focus:border-cyber-teal/60 focus:outline-none"
+          />
+          <span className="font-code text-2xs text-cyber-teal">
+            Position #{order || 1}
+          </span>
+        </div>
       </div>
 
       {/* Publication Status Toggle */}

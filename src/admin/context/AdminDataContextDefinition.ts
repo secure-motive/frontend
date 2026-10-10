@@ -30,6 +30,7 @@ export interface AdminDataContextValue {
   updateVideo: (id: string, values: Partial<VideoFormValues>) => Promise<AdminVideo | null>
   deleteVideo: (id: string) => Promise<boolean>
   toggleVideoPublish: (id: string) => Promise<boolean>
+  reorderVideos: (videoOrders: { id: string; order: number }[]) => Promise<void>
 
   // Applications & Messages backend actions
   deleteApplication: (id: string) => Promise<boolean>
