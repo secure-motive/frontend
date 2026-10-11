@@ -2,7 +2,7 @@ import type { PointBlock, ServiceItem } from '@/types/service'
 
 /** A line of text, or a row of orange-dotted items for a list in the source. */
 function Block({ block }: { block: PointBlock }) {
-  if (typeof block === 'string') return <p>{block}</p>
+  if (typeof block === 'string') return <p className="text-justify">{block}</p>
 
   return (
     <ul className="flex flex-wrap gap-x-6 gap-y-1.5">
@@ -37,7 +37,7 @@ export default function ServiceItemSection({ item }: { item: ServiceItem }) {
         {item.points?.map((point) => (
           <div key={point.title}>
             <h3 className="font-display font-semibold tracking-wide text-white">{point.title}</h3>
-            <div className="mt-1 flex flex-col gap-2 leading-relaxed text-cyber-muted">
+            <div className="mt-1 flex flex-col gap-2 leading-relaxed text-white text-justify">
               {point.body.map((block, index) => (
                 <Block key={index} block={block} />
               ))}

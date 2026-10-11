@@ -21,9 +21,9 @@ export default function ServiceDetail() {
         <div className="flex flex-col gap-12 lg:col-span-2">
           {/* Main Introduction Paragraphs from PDF */}
           {domain.intro && (
-            <div className="flex flex-col gap-5 text-base/relaxed sm:text-lg/relaxed text-cyber-muted">
+            <div className="flex flex-col gap-5 text-base/relaxed sm:text-lg/relaxed text-white text-justify">
               {domain.intro.split('\n\n').map((paragraph, idx) => (
-                <p key={idx}>{paragraph}</p>
+                <p key={idx} className="text-justify">{paragraph}</p>
               ))}
             </div>
           )}
@@ -44,7 +44,7 @@ export default function ServiceDetail() {
                       aria-hidden="true"
                       className="mt-1.5 size-2 shrink-0 rounded-full bg-cyber-orange shadow-[0_0_8px_rgba(255,107,0,0.6)]"
                     />
-                    <span className="font-medium text-white/90">{service}</span>
+                    <span className="font-medium text-white">{service}</span>
                   </li>
                 ))}
               </ul>
@@ -60,9 +60,9 @@ export default function ServiceDetail() {
               <h2 className="font-display text-2xl font-bold tracking-wide text-white">
                 {domain.closingSection.title}
               </h2>
-              <div className="mt-4 flex flex-col gap-4 text-base/relaxed sm:text-lg/relaxed text-cyber-muted">
+              <div className="mt-4 flex flex-col gap-4 text-base/relaxed sm:text-lg/relaxed text-white text-justify">
                 {domain.closingSection.paragraphs.map((p, idx) => (
-                  <p key={idx}>{p}</p>
+                  <p key={idx} className="text-justify">{p}</p>
                 ))}
                 {domain.closingSection.slogan && (
                   <p className="mt-3 font-display text-lg font-semibold tracking-wide text-cyber-teal italic">

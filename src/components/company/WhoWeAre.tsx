@@ -30,9 +30,9 @@ export default function WhoWeAre() {
               size="lg"
               className="mb-6"
             />
-            <div className="space-y-4 text-base leading-relaxed text-cyber-muted sm:text-lg">
+            <div className="space-y-4 text-base leading-relaxed text-white sm:text-lg text-justify">
               {whoWeAre.paragraphs.map((paragraph, idx) => (
-                <p key={idx} className={idx === 0 ? 'text-white/95 font-medium' : 'text-cyber-muted'}>
+                <p key={idx} className="text-white text-justify">
                   {paragraph}
                 </p>
               ))}
@@ -59,7 +59,7 @@ export default function WhoWeAre() {
                   </h3>
                 </div>
               </div>
-              <p className="border-t border-cyber-teal/15 pt-4 text-sm leading-relaxed text-white/80">
+              <p className="border-t border-cyber-teal/15 pt-4 text-sm leading-relaxed text-white text-justify">
                 Operating at the converged frontier of embedded system architecture, operational technology (OT), and advanced threat intelligence to safeguard mission-critical fleets and heavy machinery.
               </p>
               <div className="mt-5 flex flex-wrap gap-2 font-code text-2xs text-cyber-teal/80">
@@ -82,7 +82,7 @@ export default function WhoWeAre() {
 
         {/* 3 Prominent Stat / Pillar Cards from Page 1 of the PDF */}
         <div className="mt-12 grid gap-6 sm:grid-cols-3 md:mt-16">
-          {corporatePillars.map((pillar, i) => (
+          {corporatePillars.map((pillar) => (
             <Card
               key={pillar.title}
               interactive
@@ -93,19 +93,12 @@ export default function WhoWeAre() {
                 className="pointer-events-none absolute -right-6 -bottom-6 size-24 rounded-full bg-cyber-teal/5 blur-xl transition-all duration-300 group-hover:bg-cyber-teal/15 group-hover:scale-125"
               />
               <div>
-                <div className="flex items-center justify-between pb-3">
-                  <span className="font-code text-xs text-cyber-teal/60">0{i + 1} // PILLAR</span>
-                  <span className="size-1.5 rounded-full bg-cyber-teal animate-ping" />
-                </div>
                 <h3 className="font-display text-2xl font-bold tracking-wider text-white transition-colors duration-200 group-hover:text-cyber-teal sm:text-3xl">
                   {pillar.title}
                 </h3>
                 <p className="mt-2 font-code text-xs font-semibold tracking-wide text-cyber-teal">
                   {pillar.subtitle}
                 </p>
-              </div>
-              <div className="mt-6 border-t border-cyber-teal/15 pt-3">
-                <span className="text-xs text-cyber-muted">{pillar.highlight}</span>
               </div>
             </Card>
           ))}

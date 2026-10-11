@@ -9,7 +9,7 @@ import ServiceHeroBackground from './ServiceHeroBackground'
 /** Top band of a domain page: back link, tag, title, rule and optional tagline. */
 export default function ServiceDetailHero({ domain }: { domain: ServiceDomain }) {
   return (
-    <HeroBand background={<ServiceHeroBackground videoSrc={domain.video} />}>
+    <HeroBand size="tall" background={<ServiceHeroBackground videoSrc={domain.video} />}>
       <TextLink to={ROUTES.services} arrow="left" tone="muted">
         All services
       </TextLink>

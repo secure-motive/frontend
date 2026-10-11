@@ -41,7 +41,7 @@ export default function ArticleDetail() {
 
         {/* The top padding includes the empty 37px band the design leaves under every hero. */}
         <Container className="grid items-start gap-12 pt-14 pb-14 md:pt-25 md:pb-16 lg:grid-cols-3">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 text-justify">
             <ArticleContent blocks={getArticleContent(article.slug)} />
           </div>
           <ArticleNavigation slug={article.slug} />

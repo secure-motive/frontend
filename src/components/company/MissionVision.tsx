@@ -24,7 +24,7 @@ export default function MissionVision() {
           <h2 className="font-display text-2xl font-bold tracking-wide text-white sm:text-3xl">
             {statement.heading}
           </h2>
-          <p className="pt-2 leading-relaxed text-cyber-muted">{statement.body}</p>
+          <p className="pt-2 leading-relaxed text-white text-justify">{statement.body}</p>
         </Card>
       ))}
     </Container>

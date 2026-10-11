@@ -26,7 +26,7 @@ export default function ServiceSidebar({ domain }: { domain: ServiceDomain }) {
               />
               <Link
                 to={{ hash: 'services-list' }}
-                className="text-cyber-muted transition-colors hover:text-cyber-teal"
+                className="text-white transition-colors hover:text-cyber-teal"
               >
                 {service}
               </Link>
@@ -52,7 +52,7 @@ export default function ServiceSidebar({ domain }: { domain: ServiceDomain }) {
         <SectionLabel as="h2" tone="orange">
           Engage this service
         </SectionLabel>
-        <p className="mt-3 text-sm text-cyber-muted">
+        <p className="mt-3 text-sm text-white text-justify">
           Ready to start? Talk to our specialists about your specific requirements.
         </p>
         <div className="mt-5">

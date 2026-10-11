@@ -34,17 +34,14 @@ export const corporatePillars: CorporatePillar[] = [
   {
     title: 'GLOBAL OEM LEADER',
     subtitle: 'TRUSTED TIER-1 & OEM PARTNER',
-    highlight: 'Global Tier-1 & OEM Partner',
   },
   {
     title: 'END-TO-END',
     subtitle: 'CHIP-TO-CLOUD PROTECTION',
-    highlight: 'Silicon-to-Cloud Lifecycle Defense',
   },
   {
     title: '100% COMPLIANT',
     subtitle: 'UN R155, R156 & ISO 21434',
-    highlight: 'Turnkey Regulatory Certification',
   },
 ]
 

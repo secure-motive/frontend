@@ -9,11 +9,9 @@ import PageHeading from '@/components/common/PageHeading'
 import SectionHeading from '@/components/common/SectionHeading'
 import SectionLabel from '@/components/common/SectionLabel'
 import Tag from '@/components/common/Tag'
-import TechnicalTicker from '@/components/common/TechnicalTicker'
 import TextLink from '@/components/common/TextLink'
 import PageContainer from '@/components/layout/PageContainer'
 import { frameworks } from '@/data/frameworks'
-import { tickers } from '@/data/tickers'
 import { ROUTES } from '@/routes/paths'
 import type { ServiceAccent } from '@/types/service'
 
@@ -80,8 +78,6 @@ export default function DevComponents() {
         </div>
       </Container>
 
-      <TechnicalTicker items={tickers.homeCapabilities} />
-
       <Container className="flex flex-col gap-12 py-24">
         <SectionHeading label="The case for joining" title="Why choose" highlight="SecureXmotive" />
         <div className="grid gap-5 md:grid-cols-3">
@@ -104,8 +100,6 @@ export default function DevComponents() {
           </Card>
         </div>
       </Container>
-
-      <TechnicalTicker items={tickers.homeTechnologies} tone="grey" />
 
       <div className="h-24" />
 

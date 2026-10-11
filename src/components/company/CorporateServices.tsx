@@ -16,7 +16,7 @@ export default function CorporateServices() {
               highlight="Service Offerings"
               size="lg"
             />
-            <p className="mt-4 max-w-3xl text-base leading-relaxed text-cyber-muted">
+            <p className="mt-4 max-w-3xl text-base leading-relaxed text-white text-justify">
               SecureXmotive provides holistic cybersecurity solutions covering the entire product
               development lifecycle—from concept and architecture to post-production threat
               monitoring.
@@ -65,7 +65,7 @@ export default function CorporateServices() {
                           {service.badge}
                         </span>
                       </div>
-                      <p className="mt-3 max-w-4xl text-sm leading-relaxed text-cyber-muted sm:text-base">
+                      <p className="mt-3 max-w-4xl text-sm leading-relaxed text-white sm:text-base text-justify">
                         {service.description}
                       </p>
                     </div>

@@ -1,7 +1,5 @@
 import PageHeading from '@/components/common/PageHeading'
-import TechnicalTicker from '@/components/common/TechnicalTicker'
 import CompanyCTA from '@/components/company/CompanyCTA'
-import CompanyTimeline from '@/components/company/CompanyTimeline'
 import CorporateServices from '@/components/company/CorporateServices'
 import CoreUSPs from '@/components/company/CoreUSPs'
 import SectorSpecializations from '@/components/company/SectorSpecializations'
@@ -9,7 +7,6 @@ import WhoWeAre from '@/components/company/WhoWeAre'
 import WhyPartner from '@/components/company/WhyPartner'
 import PageContainer from '@/components/layout/PageContainer'
 import { corporateHero } from '@/data/company'
-import { tickers } from '@/data/tickers'
 
 /** Soft teal glow in the top-right corner of the Company hero. */
 const heroGlow = (
@@ -34,9 +31,6 @@ export default function Company() {
       {/* 1. Who We Are & 3 Core Pillar Badges from PDF Page 1 */}
       <WhoWeAre />
 
-      {/* Dynamic Technical Ticker */}
-      <TechnicalTicker items={tickers.companyValues} />
-
       {/* 2. Sector Specializations from PDF Page 1 */}
       <SectorSpecializations />
 
@@ -49,14 +43,9 @@ export default function Company() {
       {/* 5. Why Partner with SecureXmotive? from PDF Page 2 */}
       <WhyPartner />
 
-      {/* Technical Ticker with Historical & Technological Milestones */}
-      <TechnicalTicker items={tickers.companyMilestones} tone="grey" />
-
-      {/* Company Timeline & History */}
-      <CompanyTimeline />
-
       {/* Call to Action Band */}
       <CompanyCTA />
     </PageContainer>
   )
 }
+

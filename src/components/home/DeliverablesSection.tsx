@@ -18,7 +18,7 @@ function ServiceCard({ domain }: { domain: ServiceDomain }) {
       <h3 className="mb-2.5 font-display text-xl font-semibold tracking-wide text-white transition-colors group-hover:text-cyber-teal">
         {domain.name}
       </h3>
-      <p className="text-sm leading-relaxed text-white/75">
+      <p className="text-sm leading-relaxed text-white text-justify">
         {domain.summary || domain.items.map((item) => item.title).join(', ') + '.'}
       </p>
     </Card>

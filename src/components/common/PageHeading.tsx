@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/utils/helpers'
 import Divider from './Divider'
-import HeroBand from './HeroBand'
+import HeroBand, { type HeroBandSize } from './HeroBand'
 import SectionLabel from './SectionLabel'
 
 interface PageHeadingProps {
@@ -17,6 +17,10 @@ interface PageHeadingProps {
   descriptionSize?: 'base' | 'lg'
   /** Extra background layers for the band (e.g. the Company page glow). */
   background?: ReactNode
+  /** Size variant for hero band height */
+  size?: HeroBandSize
+  /** Additional classes for the section element */
+  sectionClassName?: string
   /** Supporting content rendered under the description. */
   children?: ReactNode
 }
@@ -30,10 +34,12 @@ export default function PageHeading({
   description,
   descriptionSize = 'base',
   background,
+  size = 'default',
+  sectionClassName,
   children,
 }: PageHeadingProps) {
   return (
-    <HeroBand background={background}>
+    <HeroBand background={background} size={size} sectionClassName={sectionClassName}>
       <SectionLabel>{label}</SectionLabel>
       <h1 className="font-display text-[2.5rem] leading-none font-bold tracking-tight text-white uppercase sm:text-6xl md:text-7xl lg:text-8xl">
         {title}

@@ -2,12 +2,10 @@ import Button from '@/components/common/Button'
 import Container from '@/components/common/Container'
 import CtaBand from '@/components/common/CtaBand'
 import PageHeading from '@/components/common/PageHeading'
-import TechnicalTicker from '@/components/common/TechnicalTicker'
 import PageContainer from '@/components/layout/PageContainer'
 import ServiceHeroBackground from '@/components/services/ServiceHeroBackground'
 import ServiceRow from '@/components/services/ServiceRow'
 import { serviceDomains } from '@/data/services'
-import { tickers } from '@/data/tickers'
 import { ROUTES } from '@/routes/paths'
 
 export default function Services() {
@@ -19,6 +17,7 @@ export default function Services() {
         label="Capabilities matrix"
         title="Our"
         highlight="Services"
+        size="tall"
         background={<ServiceHeroBackground videoSrc="/gifs/home.mp4" />}
       />
 
@@ -33,8 +32,6 @@ export default function Services() {
         </ul>
       </Container>
 
-      <TechnicalTicker items={tickers.services} />
-
       <CtaBand
         title="Not sure where to start?"
         description="Our specialists will map your compliance gaps and recommend a tailored engagement plan."
@@ -44,3 +41,4 @@ export default function Services() {
     </PageContainer>
   )
 }
+

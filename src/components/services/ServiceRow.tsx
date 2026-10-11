@@ -67,14 +67,14 @@ export default function ServiceRow({ domain }: { domain: ServiceDomain }) {
             {domain.name}
           </h2>
           {domain.summary && (
-            <p className="max-w-2xl leading-relaxed text-cyber-muted">{domain.summary}</p>
+            <p className="max-w-2xl leading-relaxed text-white text-justify">{domain.summary}</p>
           )}
           <ul className="flex flex-wrap gap-3 pt-2">
             {domain.items.map((item) => (
               <li
                 key={item.slug}
                 className={cn(
-                  'flex items-center gap-2 rounded-lg border border-white/5 px-3 py-1.5 text-sm text-cyber-muted',
+                  'flex items-center gap-2 rounded-lg border border-white/5 px-3 py-1.5 text-sm text-white',
                   accent.chip,
                 )}
               >

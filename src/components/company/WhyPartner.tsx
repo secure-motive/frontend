@@ -22,9 +22,9 @@ export default function WhyPartner() {
               {whyPartner.subheading}
             </div>
 
-            <div className="space-y-4 text-base leading-relaxed text-cyber-muted sm:text-lg">
+            <div className="space-y-4 text-base leading-relaxed text-white sm:text-lg text-justify">
               {whyPartner.paragraphs.map((p, idx) => (
-                <p key={idx} className={idx === 0 ? 'text-white/95 font-medium' : 'text-cyber-muted'}>
+                <p key={idx} className="text-white text-justify">
                   {p}
                 </p>
               ))}
@@ -71,7 +71,7 @@ export default function WhyPartner() {
                     {adv.title}
                   </h3>
 
-                  <p className="mt-2 text-xs leading-relaxed text-cyber-muted">
+                  <p className="mt-2 text-xs leading-relaxed text-white text-justify">
                     {adv.description}
                   </p>
                 </div>

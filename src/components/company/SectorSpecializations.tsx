@@ -17,11 +17,11 @@ function SectorIcon({ icon }: { icon: SectorSpecialization['icon'] }) {
         className="size-7"
         aria-hidden="true"
       >
-        {/* Sleek passenger vehicle / SDV shape */}
-        <path d="M4 17h16M5 17l1.5-6.5a2 2 0 0 1 1.9-1.5h7.2a2 2 0 0 1 1.9 1.5L19 17" />
-        <circle cx="7.5" cy="17.5" r="2.5" />
-        <circle cx="16.5" cy="17.5" r="2.5" />
-        <path d="M7 11h10M12 9V5M9 6l3-3 3 3" />
+        {/* Automotive & Passenger Vehicles (Passenger SDV / Sedan) */}
+        <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.8C2.1 11.1 2 11.5 2 12v4c0 .6.4 1 1 1h2" />
+        <circle cx="7" cy="17" r="2" />
+        <path d="M9 17h6" />
+        <circle cx="17" cy="17" r="2" />
       </svg>
     )
   }
@@ -38,12 +38,12 @@ function SectorIcon({ icon }: { icon: SectorSpecialization['icon'] }) {
         className="size-7"
         aria-hidden="true"
       >
-        {/* Smart agricultural tractor / machinery */}
-        <path d="M3 17h2M7 17h6M11 9H5a2 2 0 0 0-2 2v6" />
-        <path d="M14 6h4l2 5v6h-3" />
-        <circle cx="7" cy="17" r="2" />
-        <circle cx="17" cy="15" r="4" />
-        <path d="M14 11h6M12 6V3M9 4l3-2 3 2" />
+        {/* Agriculture & Smart Farming (Agricultural Tractor) */}
+        <path d="M10 11l11 .9a1 1 0 0 1 .8 1.1l-.66 5a1 1 0 0 1-.99.85l-4.15-.35" />
+        <path d="M4 18V8a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
+        <path d="M8 8V4a1 1 0 0 0-1-1H6a1 1 0 0 0-1 1v4" />
+        <circle cx="18" cy="18" r="2" />
+        <circle cx="7" cy="15" r="5" />
       </svg>
     )
   }
@@ -60,17 +60,17 @@ function SectorIcon({ icon }: { icon: SectorSpecialization['icon'] }) {
         className="size-7"
         aria-hidden="true"
       >
-        {/* Commercial transport & freight truck */}
-        <rect x="2" y="6" width="13" height="10" rx="1" />
-        <path d="M15 10h4l3 3v3h-7v-6z" />
-        <circle cx="6" cy="17" r="2" />
-        <circle cx="18" cy="17" r="2" />
-        <path d="M19 13h2M6 10h5" />
+        {/* Commercial Vehicles & Logistics (Transport & Freight Truck) */}
+        <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
+        <path d="M15 18H9" />
+        <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14" />
+        <circle cx="17" cy="18" r="2" />
+        <circle cx="7" cy="18" r="2" />
       </svg>
     )
   }
 
-  // industrial & off-highway
+  // industrial & off-highway machinery
   return (
     <svg
       viewBox="0 0 24 24"
@@ -82,11 +82,15 @@ function SectorIcon({ icon }: { icon: SectorSpecialization['icon'] }) {
       className="size-7"
       aria-hidden="true"
     >
-      {/* Heavy industrial machinery / rig & gears */}
-      <path d="M4 19h16M3 15h6l3-6h5l2 4M6 15l2-6h4" />
-      <circle cx="7" cy="19" r="2" />
-      <circle cx="17" cy="19" r="2" />
-      <path d="M14 6l4-3 3 2M18 3v6" />
+      {/* Industrial & Off-Highway Machinery (Heavy Construction Excavator / Mining Rig) */}
+      <rect x="2" y="16" width="11" height="4" rx="2" />
+      <circle cx="4.5" cy="18" r="0.75" />
+      <circle cx="7.5" cy="18" r="0.75" />
+      <circle cx="10.5" cy="18" r="0.75" />
+      <path d="M3 16V9a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v7" />
+      <path d="M5 11h3" />
+      <path d="M9 12l5-7 4.5 4" />
+      <path d="M18.5 9l2.5 1.5-1.5 3-2.5-.5z" />
     </svg>
   )
 }
@@ -103,7 +107,7 @@ export default function SectorSpecializations() {
               highlight="Specializations"
               size="lg"
             />
-            <p className="mt-4 max-w-2xl text-base leading-relaxed text-cyber-muted">
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-white text-justify">
               Our engineering teams possess deep field experience across harsh operational
               environments and specialized bus architectures:
             </p>
@@ -136,7 +140,7 @@ export default function SectorSpecializations() {
                   {sector.title}
                 </h3>
 
-                <p className="mt-3 text-sm leading-relaxed text-cyber-muted">
+                <p className="mt-3 text-sm leading-relaxed text-white text-justify">
                   {sector.description}
                 </p>
               </div>

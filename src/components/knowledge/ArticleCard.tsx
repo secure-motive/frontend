@@ -15,7 +15,7 @@ export default function ArticleCard({ article }: { article: Article }) {
         <h2 className="mt-1 font-display text-lg font-semibold tracking-wide text-white transition-colors group-hover:text-cyber-teal">
           {article.title}
         </h2>
-        <p className="mt-1 text-sm leading-relaxed text-cyber-muted">{article.excerpt}</p>
+        <p className="mt-1 text-sm leading-relaxed text-white text-justify">{article.excerpt}</p>
       </div>
       <ArrowRightIcon className="mt-1 size-4 shrink-0 text-cyber-muted transition-colors group-hover:text-cyber-teal" />
     </Card>

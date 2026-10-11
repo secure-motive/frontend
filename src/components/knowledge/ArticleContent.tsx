@@ -35,7 +35,7 @@ function Block({ block }: { block: ArticleBlock }) {
 
   if (block.type === 'paragraph') {
     return (
-      <p>
+      <p className="text-justify">
         <Text value={block.text} />
       </p>
     )
@@ -54,7 +54,7 @@ function Block({ block }: { block: ArticleBlock }) {
           ) : (
             <span aria-hidden="true" className="mt-2.5 size-1.5 shrink-0 rounded-full bg-cyber-orange" />
           )}
-          <span>
+          <span className="text-justify">
             <Text value={item} />
           </span>
         </li>
@@ -70,7 +70,7 @@ function Block({ block }: { block: ArticleBlock }) {
  */
 export default function ArticleContent({ blocks }: { blocks: ArticleBlock[] }) {
   return (
-    <div className="flex flex-col gap-4 leading-relaxed text-cyber-muted">
+    <div className="flex flex-col gap-4 leading-relaxed text-white text-justify">
       {blocks.map((block, index) => (
         <Block key={index} block={block} />
       ))}

@@ -62,7 +62,7 @@ export default function CoreUSPs() {
                       {usp.title}
                     </h3>
 
-                    <p className="mt-4 text-sm leading-relaxed text-cyber-muted">
+                    <p className="mt-4 text-sm leading-relaxed text-white text-justify">
                       {usp.description}
                     </p>
                   </div>

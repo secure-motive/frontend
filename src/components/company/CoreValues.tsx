@@ -18,7 +18,7 @@ export default function CoreValues() {
                 <h3 className="pt-2 font-display text-lg font-semibold tracking-wide text-white">
                   {value.title}
                 </h3>
-                <p className="text-xs leading-relaxed text-cyber-muted">{value.description}</p>
+                <p className="text-xs leading-relaxed text-white text-justify">{value.description}</p>
               </Card>
             </li>
           ))}
