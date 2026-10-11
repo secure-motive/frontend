@@ -29,7 +29,7 @@ export default function Careers() {
       />
       <WhyChooseUs />
       <JobList applyTo={`#${APPLY_SECTION_ID}`} onApply={applyFor} />
-      {/* <SubmitResume id={APPLY_SECTION_ID} form={form} /> */}
+      <SubmitResume id={APPLY_SECTION_ID} form={form} />
     </PageContainer>
   )
 }
