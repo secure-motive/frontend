@@ -2,7 +2,7 @@
 export const KNOWLEDGE_TABS = [
   { id: 'articles', label: 'Articles' },
   { id: 'videos', label: 'Videos' },
-  { id: 'reports', label: 'Reports' },
+  // { id: 'reports', label: 'Reports' },
 ] as const
 
 export type KnowledgeTabId = (typeof KNOWLEDGE_TABS)[number]['id']

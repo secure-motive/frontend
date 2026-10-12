@@ -13,18 +13,22 @@ export default function OfficeCard({ office }: { office: Office }) {
       </div>
       <address className="mt-3 flex flex-col items-start gap-2 not-italic">
         <span className="text-xs leading-relaxed text-cyber-muted">{office.address}</span>
-        <a
-          href={`mailto:${office.email}`}
-          className="font-code text-xs text-cyber-teal underline-offset-4 hover:underline"
-        >
-          {office.email}
-        </a>
-        <a
-          href={`tel:${office.phone.replaceAll(' ', '')}`}
-          className="font-code text-xs text-cyber-muted transition-colors hover:text-cyber-teal"
-        >
-          {office.phone}
-        </a>
+        {office.email && (
+          <a
+            href={`mailto:${office.email}`}
+            className="font-code text-xs text-cyber-teal underline-offset-4 hover:underline"
+          >
+            {office.email}
+          </a>
+        )}
+        {office.phone && (
+          <a
+            href={`tel:${office.phone.replaceAll(' ', '')}`}
+            className="font-code text-xs text-cyber-muted transition-colors hover:text-cyber-teal"
+          >
+            {office.phone}
+          </a>
+        )}
       </address>
     </Card>
   )

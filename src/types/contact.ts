@@ -26,8 +26,8 @@ export interface Office {
   city: string
   country: string
   address: string
-  email: string
-  phone: string
+  email?: string
+  phone?: string
 }
 
 /** A line in the "Response time" card. */

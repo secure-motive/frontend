@@ -2,25 +2,10 @@ import type { Office, ResponseTime } from '@/types/contact'
 
 export const offices: Office[] = [
   {
-    city: 'Pune',
+    city: 'Chandigarh',
     country: 'India',
-    address: 'Cybercity, Magarpatta Township, Hadapsar, Pune 411013',
-    email: 'pune@securexmotive.com',
-    phone: '+91 20 4852 7200',
-  },
-  {
-    city: 'Munich',
-    country: 'Germany',
-    address: 'Parkring 6, 85748 Garching bei München, Germany',
-    email: 'munich@securexmotive.com',
-    phone: '+49 89 215 3480',
-  },
-  {
-    city: 'Singapore',
-    country: 'Singapore',
-    address: '1 Fusionopolis Place, Galaxis #07-08, Singapore 138522',
-    email: 'sg@securexmotive.com',
-    phone: '+65 6327 4800',
+    address: 'Sector 5, Panchkula',
+    email: 'contact@securexmotive.com',
   },
 ]
 
