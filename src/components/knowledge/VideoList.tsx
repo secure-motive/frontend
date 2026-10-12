@@ -38,7 +38,7 @@ export default function VideoList() {
     )
   }
 
-  if (videos.length === 0) return <TabMessage>No videos have been published yet.</TabMessage>
+  if (videos.length === 0) return <TabMessage ><div className="flex justify-center items-center text-lg">Coming soon</div></TabMessage>
 
   return (
     <>
