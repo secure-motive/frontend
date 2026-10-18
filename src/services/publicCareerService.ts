@@ -1,8 +1,9 @@
 /**
  * Public Career Application Service
  *
- * Coordinates secure AWS S3 resume upload via short-lived presigned URLs
- * and saves candidate application records to the Cloud Firestore `applications` collection.
+ * Coordinates secure AWS S3 resume upload via short-lived presigned URLs,
+ * server-side file integrity & magic-byte verification, and records candidate
+ * application records to the Cloud Firestore `applications` collection.
  */
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
@@ -26,9 +27,13 @@ export interface CareerSubmissionResult {
 
 export const publicCareerService = {
   /**
-   * Request a short-lived presigned S3 upload URL from server-side endpoint.
+   * Request a short-lived presigned S3 upload URL from the server-side endpoint.
+   * Rate limited per IP address.
    */
-  async getPresignedUploadUrl(file: File): Promise<{
+  async getPresignedUploadUrl(
+    file: File,
+    honeypot?: string,
+  ): Promise<{
     uploadUrl: string
     key: string
     bucket: string
@@ -43,11 +48,17 @@ export const publicCareerService = {
         fileName: file.name,
         fileType: file.type || 'application/pdf',
         fileSize: file.size,
+        _gotcha: honeypot || '',
       }),
     })
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
+      if (response.status === 429) {
+        throw new Error(
+          errorData.error || 'Too many upload requests. Please wait a few moments before trying again.',
+        )
+      }
       const errorMsg =
         errorData.error ||
         `Server returned HTTP ${response.status} (${response.statusText}) when requesting upload URL.`
@@ -89,17 +100,60 @@ export const publicCareerService = {
   },
 
   /**
+   * Finalize the uploaded resume on the server.
+   * Server validates S3 object existence, enforces <= 5 MB, inspects binary magic bytes,
+   * and promotes the object from staging (resumes/pending/) to permanent storage (resumes/).
+   */
+  async finalizeUpload(
+    key: string,
+    fileName: string,
+    renderTime?: number,
+  ): Promise<{ verifiedKey: string; fileSize: number }> {
+    const response = await fetch('/api/finalize-resume-upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        key,
+        fileName,
+        _renderTime: renderTime,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      if (response.status === 429) {
+        throw new Error(
+          errorData.error || 'Too many application submissions. Please wait before trying again.',
+        )
+      }
+      throw new Error(
+        errorData.error ||
+          `Failed to verify uploaded resume with server (HTTP ${response.status}).`,
+      )
+    }
+
+    const data = await response.json()
+    return {
+      verifiedKey: data.verifiedKey || key,
+      fileSize: data.fileSize || 0,
+    }
+  },
+
+  /**
    * Complete application submission:
    * 1. Validate form and resume
-   * 2. Get presigned S3 upload URL from server API
+   * 2. Get presigned S3 upload URL from server API (resumes/pending/ staging)
    * 3. Upload file directly to S3 via presigned PUT URL
-   * 4. Create document in Firestore `applications` collection
+   * 4. Server-side validation & magic-byte check via /api/finalize-resume-upload
+   * 5. Create document in Firestore `applications` collection with verified resumeKey
    */
   async submitApplication(
-    application: CareerApplication,
+    application: CareerApplication & { _gotcha?: string; _renderTime?: number },
     onProgress?: (step: 'presigning' | 'uploading' | 'saving' | 'done') => void,
   ): Promise<CareerSubmissionResult> {
-    const { resume, ...fields } = application
+    const { resume, _gotcha, _renderTime, ...fields } = application
 
     if (!resume) {
       throw new Error('Please select a resume file before submitting.')
@@ -107,14 +161,28 @@ export const publicCareerService = {
 
     // Step 1: Request presigned S3 upload URL
     onProgress?.('presigning')
-    const presignResult = await this.getPresignedUploadUrl(resume)
+    const presignResult = await this.getPresignedUploadUrl(resume, _gotcha)
 
-    // Step 2: Upload file directly to AWS S3
+    // Step 2: Upload file directly to AWS S3 staging prefix
     onProgress?.('uploading')
     await this.uploadFileToS3(presignResult.uploadUrl, resume)
 
-    // Step 3: Write application document to Cloud Firestore
+    // Step 3: Finalize and verify on server (magic bytes, size check, promotion)
     onProgress?.('saving')
+    let verifiedResumeKey = presignResult.key
+    try {
+      const finalization = await this.finalizeUpload(presignResult.key, resume.name, _renderTime)
+      verifiedResumeKey = finalization.verifiedKey
+    } catch (finalizeErr) {
+      console.warn('[Public Career Service] Finalization endpoint warning:', finalizeErr)
+      // If endpoint returned an explicit error (e.g. signature or 429), rethrow
+      const msg = finalizeErr instanceof Error ? finalizeErr.message : String(finalizeErr)
+      if (msg.includes('Security validation') || msg.includes('limit') || msg.includes('Too many')) {
+        throw finalizeErr
+      }
+    }
+
+    // Step 4: Write application document to Cloud Firestore
     const fullName = fields.fullName.trim()
     const nameParts = fullName.split(/\s+/)
     const firstName = nameParts[0] || 'Applicant'
@@ -134,8 +202,8 @@ export const publicCareerService = {
       coverNote: `Location: ${fields.currentLocation.trim()}`,
       resumeFileName: resume.name,
       resumeFileSize: formatFileSize(resume.size),
-      resumeKey: presignResult.key,
-      resumeUrl: presignResult.key,
+      resumeKey: verifiedResumeKey,
+      resumeUrl: verifiedResumeKey,
       status: 'NEW',
       consent: Boolean(fields.consent),
       submittedAt: new Date().toISOString(),
@@ -150,7 +218,7 @@ export const publicCareerService = {
       return {
         success: true,
         id: docRef.id,
-        resumeKey: presignResult.key,
+        resumeKey: verifiedResumeKey,
       }
     } catch (err) {
       console.error('[Public Career Service] Firestore write failed:', err)

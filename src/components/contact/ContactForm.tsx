@@ -63,6 +63,17 @@ export default function ContactForm() {
         </div>
       ) : (
         <form noValidate onSubmit={handleSubmit} aria-labelledby="contact-form-heading">
+          {/* Honeypot field for automated bot mitigation */}
+          <div style={{ display: 'none' }} aria-hidden="true">
+            <label htmlFor="contact-hp">Website</label>
+            <input
+              id="contact-hp"
+              type="text"
+              name="_gotcha"
+              tabIndex={-1}
+              autoComplete="off"
+            />
+          </div>
           <div className="space-y-8">
             {/* Section 01 — Your Information */}
             <div className="space-y-4">

@@ -4,8 +4,7 @@ export const offices: Office[] = [
   {
     city: 'Chandigarh',
     country: 'India',
-    address: 'Sector 5, Panchkula',
-    email: 'contact@securexmotive.com',
+    address: 'Chandigarh',
   },
 ]
 

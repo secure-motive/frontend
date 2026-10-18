@@ -87,6 +87,17 @@ export default function CareerForm({ form }: { form: CareerFormState }) {
         </div>
       ) : (
         <form noValidate onSubmit={handleSubmit} aria-labelledby="careers-form-heading">
+          {/* Honeypot field for automated bot mitigation */}
+          <div style={{ display: 'none' }} aria-hidden="true">
+            <label htmlFor="careers-hp">Website</label>
+            <input
+              id="careers-hp"
+              type="text"
+              name="_gotcha"
+              tabIndex={-1}
+              autoComplete="off"
+            />
+          </div>
           <div className="space-y-8">
             {/* Section 01 — Personal Information */}
             <div className="space-y-4">

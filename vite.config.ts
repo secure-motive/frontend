@@ -6,12 +6,19 @@ import {
   generatePresignedUploadUrl,
   generatePresignedDownloadUrl,
   verifyAdminAuthorization,
+  verifyAndFinalizeResumeUpload,
 } from './src/server/s3-service.ts'
+import {
+  checkRateLimit,
+  getClientIp,
+  applyRateLimitHeaders,
+} from './src/server/rate-limiter.ts'
+import { isHoneypotTriggered } from './src/server/anti-spam.ts'
 
 /**
  * Local API plugin for Vite development server.
- * Handles /api/get-resume-upload-url and /api/get-resume-download-url
- * during local development without requiring Vercel CLI or a separate server process.
+ * Handles /api/get-resume-upload-url, /api/finalize-resume-upload,
+ * and /api/get-resume-download-url during local development.
  */
 function localDevApiPlugin(env: Record<string, string>): Plugin {
   return {
@@ -26,7 +33,7 @@ function localDevApiPlugin(env: Record<string, string>): Plugin {
           if (req.method === 'OPTIONS') {
             res.setHeader('Access-Control-Allow-Origin', '*')
             res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-            res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+            res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
             res.statusCode = 200
             res.end()
             return
@@ -39,6 +46,22 @@ function localDevApiPlugin(env: Record<string, string>): Plugin {
             return
           }
 
+          const clientIp = getClientIp(req)
+          const rateLimit = await checkRateLimit('uploadUrl', clientIp)
+          applyRateLimitHeaders(res, rateLimit)
+
+          if (!rateLimit.allowed) {
+            res.setHeader('Content-Type', 'application/json')
+            res.statusCode = 429
+            res.end(
+              JSON.stringify({
+                error: `Too many upload URL requests. Please try again in ${Math.ceil(rateLimit.retryAfterSeconds / 60)} minutes.`,
+                retryAfter: rateLimit.retryAfterSeconds,
+              }),
+            )
+            return
+          }
+
           let bodyBuffer = ''
           req.on('data', (chunk) => {
             bodyBuffer += chunk
@@ -47,6 +70,13 @@ function localDevApiPlugin(env: Record<string, string>): Plugin {
           req.on('end', async () => {
             try {
               const body = bodyBuffer ? JSON.parse(bodyBuffer) : {}
+              if (isHoneypotTriggered(body._gotcha ?? body.honeypot ?? body.website)) {
+                res.setHeader('Content-Type', 'application/json')
+                res.statusCode = 400
+                res.end(JSON.stringify({ error: 'Invalid submission parameters.' }))
+                return
+              }
+
               const result = await generatePresignedUploadUrl(body, env)
               res.setHeader('Access-Control-Allow-Origin', '*')
               res.setHeader('Content-Type', 'application/json')
@@ -67,12 +97,75 @@ function localDevApiPlugin(env: Record<string, string>): Plugin {
           return
         }
 
-        // Endpoint 2: GET or POST /api/get-resume-download-url
+        // Endpoint 2: POST /api/finalize-resume-upload
+        if (parsedUrl.pathname === '/api/finalize-resume-upload') {
+          if (req.method === 'OPTIONS') {
+            res.setHeader('Access-Control-Allow-Origin', '*')
+            res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+            res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+            res.statusCode = 200
+            res.end()
+            return
+          }
+
+          if (req.method !== 'POST') {
+            res.setHeader('Content-Type', 'application/json')
+            res.statusCode = 405
+            res.end(JSON.stringify({ error: 'Method not allowed. Use POST.' }))
+            return
+          }
+
+          const clientIp = getClientIp(req)
+          const rateLimit = await checkRateLimit('careerApplication', clientIp)
+          applyRateLimitHeaders(res, rateLimit)
+
+          if (!rateLimit.allowed) {
+            res.setHeader('Content-Type', 'application/json')
+            res.statusCode = 429
+            res.end(
+              JSON.stringify({
+                error: `Application rate limit exceeded. Please try again in ${Math.ceil(rateLimit.retryAfterSeconds / 60)} minutes.`,
+                retryAfter: rateLimit.retryAfterSeconds,
+              }),
+            )
+            return
+          }
+
+          let bodyBuffer = ''
+          req.on('data', (chunk) => {
+            bodyBuffer += chunk
+          })
+
+          req.on('end', async () => {
+            try {
+              const body = bodyBuffer ? JSON.parse(bodyBuffer) : {}
+              const result = await verifyAndFinalizeResumeUpload(body, env)
+              res.setHeader('Access-Control-Allow-Origin', '*')
+              res.setHeader('Content-Type', 'application/json')
+              res.statusCode = 200
+              res.end(JSON.stringify(result))
+            } catch (err: unknown) {
+              const message = err instanceof Error ? err.message : String(err)
+              const isClientError =
+                message.includes('Invalid') ||
+                message.includes('not found') ||
+                message.includes('signature') ||
+                message.includes('exceeds')
+              res.setHeader('Access-Control-Allow-Origin', '*')
+              res.setHeader('Content-Type', 'application/json')
+              res.statusCode = isClientError ? 400 : 500
+              res.end(JSON.stringify({ error: message }))
+            }
+          })
+          return
+        }
+
+        // Endpoint 3: GET or POST /api/get-resume-download-url
         if (parsedUrl.pathname === '/api/get-resume-download-url') {
           if (req.method === 'OPTIONS') {
             res.setHeader('Access-Control-Allow-Origin', '*')
             res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-            res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+            res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
             res.statusCode = 200
             res.end()
             return
@@ -95,6 +188,14 @@ function localDevApiPlugin(env: Record<string, string>): Plugin {
           // 2. Validate S3 object key
           const key = parsedUrl.searchParams.get('key') || ''
           const fileName = parsedUrl.searchParams.get('fileName') || 'resume.pdf'
+
+          if (!key || !/^resumes\/[a-zA-Z0-9_./-]+$/.test(key) || key.includes('..')) {
+            res.setHeader('Access-Control-Allow-Origin', '*')
+            res.setHeader('Content-Type', 'application/json')
+            res.statusCode = 400
+            res.end(JSON.stringify({ error: 'Invalid resume key. Access restricted to resumes/ namespace.' }))
+            return
+          }
 
           try {
             const result = await generatePresignedDownloadUrl({ key, fileName }, env)

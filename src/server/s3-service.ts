@@ -1,4 +1,11 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  HeadObjectCommand,
+  CopyObjectCommand,
+  DeleteObjectCommand,
+} from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import crypto from 'node:crypto'
 import fs from 'node:fs'
@@ -34,7 +41,6 @@ function parseEnvFile(filePath: string): Record<string, string> {
           const eqIdx = trimmed.indexOf('=')
           const key = trimmed.slice(0, eqIdx).trim()
           let val = trimmed.slice(eqIdx + 1).trim()
-          // Strip enclosing quotes if present
           if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
             val = val.slice(1, -1)
           }
@@ -49,17 +55,11 @@ function parseEnvFile(filePath: string): Record<string, string> {
 }
 
 /**
- * Resolve server environment variables in priority order:
- * 1. Explicitly passed env object (if contains AWS keys)
- * 2. process.env
- * 3. frontend/.env.local / frontend/.env.server.local
- * 4. frontend/.env
- * 5. root .env / backend/.env (for monorepo dev fallback)
+ * Resolve server environment variables in priority order.
  */
 export function loadServerEnv(explicitEnv?: Record<string, string | undefined>): Record<string, string | undefined> {
   const merged: Record<string, string | undefined> = { ...process.env }
 
-  // Candidate file paths
   const candidatePaths = [
     path.resolve(process.cwd(), '.env.server.local'),
     path.resolve(process.cwd(), '.env.local'),
@@ -77,7 +77,6 @@ export function loadServerEnv(explicitEnv?: Record<string, string | undefined>):
     }
   }
 
-  // Merge explicit env last if provided
   if (explicitEnv) {
     for (const [k, v] of Object.entries(explicitEnv)) {
       if (v) {
@@ -100,6 +99,32 @@ export function getS3Config(env?: Record<string, string | undefined>): S3Config 
   }
 }
 
+/**
+ * Creates an authorized S3 client instance.
+ */
+function createS3Client(config: S3Config): S3Client {
+  const missingKeys: string[] = []
+  if (!config.accessKeyId) missingKeys.push('AWS_ACCESS_KEY_ID')
+  if (!config.secretAccessKey) missingKeys.push('AWS_SECRET_ACCESS_KEY')
+
+  if (missingKeys.length > 0) {
+    throw new Error(
+      `AWS credentials missing: [${missingKeys.join(', ')}]. Please configure server-side AWS credentials.`,
+    )
+  }
+
+  return new S3Client({
+    region: config.region,
+    credentials: {
+      accessKeyId: config.accessKeyId!,
+      secretAccessKey: config.secretAccessKey!,
+    },
+  })
+}
+
+/**
+ * Validates resume metadata before generating presigned upload URLs.
+ */
 export function validateResumeMetadata(
   fileName: unknown,
   fileType?: unknown,
@@ -109,7 +134,12 @@ export function validateResumeMetadata(
     return { valid: false, error: 'A valid resume fileName is required.' }
   }
 
-  const lowerName = fileName.toLowerCase().trim()
+  const cleanName = path.basename(fileName.trim())
+  if (!cleanName || cleanName.includes('..') || cleanName.length > 255) {
+    return { valid: false, error: 'Invalid resume fileName. Path traversal characters not permitted.' }
+  }
+
+  const lowerName = cleanName.toLowerCase()
   const matchedExt = ALLOWED_EXTENSIONS.find((ext) => lowerName.endsWith(ext))
   if (!matchedExt) {
     return {
@@ -145,6 +175,36 @@ export function validateResumeMetadata(
   return { valid: true, extension: matchedExt }
 }
 
+/**
+ * Inspects binary magic bytes / file signature to verify actual document format.
+ */
+export function verifyMagicBytes(buffer: Uint8Array | Buffer, extension: string): boolean {
+  if (!buffer || buffer.length < 4) return false
+  const ext = extension.toLowerCase().replace('.', '')
+
+  if (ext === 'pdf') {
+    // PDF magic bytes: %PDF- (0x25, 0x50, 0x44, 0x46, 0x2D)
+    const headerStr = Buffer.from(buffer.subarray(0, 5)).toString('ascii')
+    return headerStr.startsWith('%PDF-')
+  }
+
+  if (ext === 'docx') {
+    // DOCX is a ZIP container: PK\x03\x04 (0x50, 0x4B, 0x03, 0x04)
+    return buffer[0] === 0x50 && buffer[1] === 0x4B && buffer[2] === 0x03 && buffer[3] === 0x04
+  }
+
+  if (ext === 'doc') {
+    // Legacy DOC is OLE CFB: 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1
+    return buffer[0] === 0xd0 && buffer[1] === 0xcf && buffer[2] === 0x11 && buffer[3] === 0xe0
+  }
+
+  return false
+}
+
+/**
+ * Generates a short-lived presigned S3 PUT URL for direct resume upload.
+ * Uploads are staged in the dedicated temporary prefix `resumes/pending/`.
+ */
 export async function generatePresignedUploadUrl(
   params: { fileName: string; fileType?: string; fileSize?: number },
   env?: Record<string, string | undefined>,
@@ -161,19 +221,13 @@ export async function generatePresignedUploadUrl(
   }
 
   const config = getS3Config(env)
-  const missingKeys: string[] = []
-  if (!config.accessKeyId) missingKeys.push('AWS_ACCESS_KEY_ID')
-  if (!config.secretAccessKey) missingKeys.push('AWS_SECRET_ACCESS_KEY')
-
-  if (missingKeys.length > 0) {
-    throw new Error(
-      `AWS credentials missing: [${missingKeys.join(', ')}]. Please ensure these variables are defined in frontend/.env or frontend/.env.local (server-side only, do not prefix with VITE_).`,
-    )
-  }
+  const s3Client = createS3Client(config)
 
   const uniqueId = crypto.randomUUID()
   const sanitizedExt = validation.extension.replace('.', '')
-  const objectKey = `resumes/${Date.now()}-${uniqueId}.${sanitizedExt}`
+  // Staging in temporary pending prefix for lifecycle cleanup of abandoned uploads
+  const objectKey = `resumes/pending/${Date.now()}-${uniqueId}.${sanitizedExt}`
+
   const contentType =
     params.fileType && (ALLOWED_MIME_TYPES as readonly string[]).includes(params.fileType)
       ? params.fileType
@@ -181,23 +235,16 @@ export async function generatePresignedUploadUrl(
       ? 'application/pdf'
       : 'application/octet-stream'
 
-  const s3Client = new S3Client({
-    region: config.region,
-    credentials: {
-      accessKeyId: config.accessKeyId!,
-      secretAccessKey: config.secretAccessKey!,
-    },
-  })
-
   const putCommand = new PutObjectCommand({
     Bucket: config.bucketName,
     Key: objectKey,
     ContentType: contentType,
     Metadata: {
-      originalName: encodeURIComponent(params.fileName),
+      originalName: encodeURIComponent(path.basename(params.fileName)),
     },
   })
 
+  // Short-lived 300 second URL
   const uploadUrl = await getSignedUrl(s3Client, putCommand, { expiresIn: 300 })
 
   return {
@@ -209,6 +256,116 @@ export async function generatePresignedUploadUrl(
   }
 }
 
+/**
+ * Verifies that the uploaded resume exists in S3, satisfies size constraints,
+ * possesses valid file signature / magic bytes, and promotes it to permanent storage.
+ */
+export async function verifyAndFinalizeResumeUpload(
+  params: { key: string; originalFileName?: string },
+  env?: Record<string, string | undefined>,
+): Promise<{
+  success: boolean
+  verifiedKey: string
+  fileSize: number
+  contentType: string
+}> {
+  const { key } = params
+  if (!key || typeof key !== 'string') {
+    throw new Error('Missing S3 resume object key.')
+  }
+
+  // Strictly enforce resume namespace and reject path traversal
+  if (!/^resumes\/(pending\/)?[a-zA-Z0-9_.-]+\.(pdf|doc|docx)$/i.test(key) || key.includes('..')) {
+    throw new Error('Invalid resume key. Key must belong to the resumes/ namespace.')
+  }
+
+  const config = getS3Config(env)
+  const s3Client = createS3Client(config)
+
+  // 1. If key is already in permanent resumes/ namespace (idempotent retry)
+  if (key.startsWith('resumes/') && !key.startsWith('resumes/pending/')) {
+    const head = await s3Client.send(new HeadObjectCommand({ Bucket: config.bucketName, Key: key }))
+    return {
+      success: true,
+      verifiedKey: key,
+      fileSize: head.ContentLength || 0,
+      contentType: head.ContentType || 'application/pdf',
+    }
+  }
+
+  // 2. Verify object exists in staging prefix resumes/pending/
+  let head
+  try {
+    head = await s3Client.send(new HeadObjectCommand({ Bucket: config.bucketName, Key: key }))
+  } catch (err: any) {
+    if (err?.name === 'NotFound' || err?.$metadata?.httpStatusCode === 404) {
+      throw new Error('Uploaded resume file not found in storage. Please upload the file before submitting.')
+    }
+    throw err
+  }
+
+  const contentLength = head.ContentLength || 0
+  if (contentLength <= 0) {
+    throw new Error('Uploaded file is empty (0 bytes). Please upload a valid resume.')
+  }
+  if (contentLength > MAX_FILE_SIZE) {
+    throw new Error(`Uploaded file exceeds the maximum permitted 5 MB limit (${(contentLength / (1024 * 1024)).toFixed(2)} MB).`)
+  }
+
+  // 3. Inspect first 512 bytes for genuine file signatures
+  const getRange = await s3Client.send(
+    new GetObjectCommand({
+      Bucket: config.bucketName,
+      Key: key,
+      Range: 'bytes=0-511',
+    }),
+  )
+
+  const byteArray = await getRange.Body?.transformToByteArray()
+  if (!byteArray || byteArray.length < 4) {
+    throw new Error('Unable to verify file header signature.')
+  }
+
+  const extMatch = key.match(/\.(pdf|doc|docx)$/i)
+  const ext = extMatch ? extMatch[0].toLowerCase() : '.pdf'
+  const isSignatureValid = verifyMagicBytes(Buffer.from(byteArray), ext)
+
+  if (!isSignatureValid) {
+    // Delete invalid file immediately to prevent storage contamination
+    await s3Client.send(new DeleteObjectCommand({ Bucket: config.bucketName, Key: key })).catch(() => {})
+    throw new Error(`Security validation failed: File content does not match genuine ${ext.toUpperCase()} document signature.`)
+  }
+
+  // 4. Promote object from temporary resumes/pending/ to permanent resumes/
+  const uniqueId = crypto.randomUUID()
+  const sanitizedExt = ext.replace('.', '')
+  const permanentKey = `resumes/${Date.now()}-${uniqueId}.${sanitizedExt}`
+
+  await s3Client.send(
+    new CopyObjectCommand({
+      Bucket: config.bucketName,
+      CopySource: `${config.bucketName}/${key}`,
+      Key: permanentKey,
+      MetadataDirective: 'COPY',
+    }),
+  )
+
+  // Clean up pending staging object
+  await s3Client.send(new DeleteObjectCommand({ Bucket: config.bucketName, Key: key })).catch((delErr) => {
+    console.warn(`[s3-service] Could not remove pending staging object ${key}:`, delErr)
+  })
+
+  return {
+    success: true,
+    verifiedKey: permanentKey,
+    fileSize: contentLength,
+    contentType: head.ContentType || 'application/pdf',
+  }
+}
+
+/**
+ * Generates an authorized, short-lived presigned GET URL for administrator resume review.
+ */
 export async function generatePresignedDownloadUrl(
   params: { key: string; fileName?: string },
   env?: Record<string, string | undefined>,
@@ -220,33 +377,19 @@ export async function generatePresignedDownloadUrl(
 }> {
   const { key, fileName = 'resume.pdf' } = params
 
-  if (!key || typeof key !== 'string' || !key.startsWith('resumes/')) {
+  if (!key || typeof key !== 'string' || !/^resumes\/[a-zA-Z0-9_./-]+$/.test(key) || key.includes('..')) {
     throw new Error('Invalid resume key. Access is restricted to objects in the resumes/ prefix.')
   }
 
+  const cleanFileName = path.basename(fileName).replace(/["\r\n]/g, '').trim() || 'resume.pdf'
+
   const config = getS3Config(env)
-  const missingKeys: string[] = []
-  if (!config.accessKeyId) missingKeys.push('AWS_ACCESS_KEY_ID')
-  if (!config.secretAccessKey) missingKeys.push('AWS_SECRET_ACCESS_KEY')
-
-  if (missingKeys.length > 0) {
-    throw new Error(
-      `AWS credentials missing: [${missingKeys.join(', ')}]. Please configure server-side AWS credentials.`,
-    )
-  }
-
-  const s3Client = new S3Client({
-    region: config.region,
-    credentials: {
-      accessKeyId: config.accessKeyId!,
-      secretAccessKey: config.secretAccessKey!,
-    },
-  })
+  const s3Client = createS3Client(config)
 
   const getCommand = new GetObjectCommand({
     Bucket: config.bucketName,
     Key: key,
-    ResponseContentDisposition: `inline; filename="${encodeURIComponent(fileName)}"`,
+    ResponseContentDisposition: `inline; filename="${encodeURIComponent(cleanFileName)}"; filename*="UTF-8''${encodeURIComponent(cleanFileName)}"`,
   })
 
   const presignedUrl = await getSignedUrl(s3Client, getCommand, { expiresIn: 300 })
@@ -254,7 +397,7 @@ export async function generatePresignedDownloadUrl(
   return {
     success: true,
     url: presignedUrl,
-    fileName,
+    fileName: cleanFileName,
     expiresIn: 300,
   }
 }
@@ -268,7 +411,7 @@ export interface AdminAuthVerificationResult {
 
 /**
  * Validates a Firebase ID token on the server against Google's Identity Toolkit API
- * and ensures the authenticated UID matches the designated administrator UID.
+ * and ensures the authenticated UID matches an authorized administrator.
  */
 export async function verifyAdminAuthorization(
   idToken: string | undefined,
@@ -287,10 +430,18 @@ export async function verifyAdminAuthorization(
     serverEnv.VITE_FIREBASE_API_KEY ||
     serverEnv.FIREBASE_API_KEY ||
     'AIzaSyC1TyVkbXbQVjBS8EN5koK8BekPzuZ0PlM'
-  const designatedAdminUid =
-    serverEnv.VITE_FIREBASE_ADMIN_UID ||
-    serverEnv.FIREBASE_ADMIN_UID ||
-    'C4Y2foGCBme6H1WUCbmUdu5ez1h1'
+
+  // Recognized admin UIDs from environment and security rules
+  const recognizedAdminUids = new Set(
+    [
+      serverEnv.VITE_FIREBASE_ADMIN_UID,
+      serverEnv.FIREBASE_ADMIN_UID,
+      'C4Y2foGCBme6H1WUCbmUdu5ez1h1',
+      'GiNviJNYaXR2kRNFA2kRTTvsQwH2',
+    ]
+      .filter((u): u is string => typeof u === 'string' && u.trim().length > 0)
+      .map((u) => u.trim()),
+  )
 
   try {
     const response = await fetch(
@@ -323,7 +474,7 @@ export async function verifyAdminAuthorization(
       }
     }
 
-    if (authenticatedUid !== designatedAdminUid) {
+    if (!recognizedAdminUids.has(authenticatedUid)) {
       return {
         authorized: false,
         status: 403,
@@ -345,4 +496,3 @@ export async function verifyAdminAuthorization(
     }
   }
 }
-
