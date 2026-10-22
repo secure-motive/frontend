@@ -44,7 +44,7 @@ export default function Footer() {
             <Link to={ROUTES.home} aria-label="SecureXmotive — home">
               <Logo size="footer" />
             </Link>
-            <p className="max-w-sm text-sm leading-relaxed text-cyber-muted">{footerTagline}</p>
+            <p className="max-w-md text-sm/relaxed text-cyber-muted xl:max-w-[330px]">{footerTagline}</p>
             <p className="flex items-center gap-2 pt-1 font-code text-xs text-cyber-teal">
               <span aria-hidden="true" className="size-2 rounded-full bg-cyber-orange" />
               SYSTEMS OPERATIONAL
