@@ -63,8 +63,8 @@ export default function Logo({ size = 'header', variant, className }: LogoProps)
       src="/logos/logo.svg"
       alt="SecureXmotive — Cybersecurity Consulting Solutions"
       className={cn(
-        'w-auto object-contain transition-opacity duration-200 hover:opacity-90 select-none',
-        isFooter ? 'h-25 sm:h-32 lg:h-34 xl:h-38' : 'h-11 sm:h-12',
+        'max-w-full w-auto object-contain transition-opacity duration-200 hover:opacity-90 select-none',
+        !className?.includes('h-') && (isFooter ? 'h-32 sm:h-40 lg:h-44 xl:h-52' : 'h-11 sm:h-12'),
         className,
       )}
       width={1180}

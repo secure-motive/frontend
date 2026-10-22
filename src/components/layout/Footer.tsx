@@ -41,10 +41,10 @@ export default function Footer() {
       <Container className="relative flex flex-col gap-6 py-16">
         <div className="grid gap-10 pb-6 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8 xl:gap-10">
           <div className="flex flex-col items-start gap-5 lg:col-span-4 xl:col-span-5">
-            <Link to={ROUTES.home} aria-label="SecureXmotive — home">
+            <Link to={ROUTES.home} aria-label="SecureXmotive — home" className="inline-block">
               <Logo size="footer" />
             </Link>
-            <p className="max-w-md text-sm/relaxed text-cyber-muted xl:max-w-[330px]">{footerTagline}</p>
+            <p className="max-w-md text-sm/relaxed text-cyber-muted xl:max-w-[390px]">{footerTagline}</p>
             <p className="flex items-center gap-2 pt-1 font-code text-xs text-cyber-teal">
               <span aria-hidden="true" className="size-2 rounded-full bg-cyber-orange" />
               SYSTEMS OPERATIONAL

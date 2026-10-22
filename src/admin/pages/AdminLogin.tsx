@@ -77,7 +77,7 @@ export default function AdminLogin() {
         {/* Portal Branding Card */}
         <div className="mb-6 text-center">
           <div className="inline-flex justify-center mb-4">
-            <Logo size="footer" className="h-20 sm:h-24" />
+            <Logo variant="full" className="h-20 sm:h-24" />
           </div>
           <div className="flex items-center justify-center gap-2">
             <span className="rounded bg-cyber-teal/15 border border-cyber-teal/30 px-2.5 py-0.5 font-code text-3xs font-semibold tracking-widest text-cyber-teal uppercase">
