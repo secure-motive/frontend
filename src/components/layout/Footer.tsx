@@ -39,57 +39,63 @@ export default function Footer() {
       />
 
       <Container className="relative flex flex-col gap-6 py-16">
-        <div className="grid gap-12 pb-6 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="flex flex-col items-start gap-5">
+        <div className="grid gap-10 pb-6 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8 xl:gap-10">
+          <div className="flex flex-col items-start gap-5 lg:col-span-4 xl:col-span-5">
             <Link to={ROUTES.home} aria-label="SecureXmotive — home">
               <Logo size="footer" />
             </Link>
-            <p className="text-sm leading-relaxed text-cyber-muted">{footerTagline}</p>
+            <p className="max-w-sm text-sm leading-relaxed text-cyber-muted">{footerTagline}</p>
             <p className="flex items-center gap-2 pt-1 font-code text-xs text-cyber-teal">
               <span aria-hidden="true" className="size-2 rounded-full bg-cyber-orange" />
               SYSTEMS OPERATIONAL
             </p>
           </div>
 
-          <FooterColumn heading="Navigation">
-            <ul className={LINK_LIST_CLASSES}>
-              {primaryNav.map((item) => (
-                <li key={item.to}>
-                  <Link to={item.to} className={LINK_CLASSES}>
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </FooterColumn>
+          <div className="lg:col-span-2 lg:pl-4 xl:pl-6">
+            <FooterColumn heading="Navigation">
+              <ul className={LINK_LIST_CLASSES}>
+                {primaryNav.map((item) => (
+                  <li key={item.to}>
+                    <Link to={item.to} className={LINK_CLASSES}>
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </FooterColumn>
+          </div>
 
-          <FooterColumn heading="Services">
-            <ul className={LINK_LIST_CLASSES}>
-              {serviceDomains.map((domain) => (
-                <li key={domain.slug}>
-                  <Link to={serviceDetailPath(domain.slug)} className={LINK_CLASSES}>
-                    {domain.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </FooterColumn>
+          <div className="lg:col-span-3">
+            <FooterColumn heading="Services">
+              <ul className={LINK_LIST_CLASSES}>
+                {serviceDomains.map((domain) => (
+                  <li key={domain.slug}>
+                    <Link to={serviceDetailPath(domain.slug)} className={LINK_CLASSES}>
+                      {domain.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </FooterColumn>
+          </div>
 
-          <FooterColumn heading="Frameworks">
-            <ul className="flex flex-wrap gap-2">
-              {footerFrameworkCodes.map((code) => (
-                <li key={code} className="flex">
-                  <FrameworkChip variant="tag">{code}</FrameworkChip>
-                </li>
-              ))}
-            </ul>
-            <div className="border-t border-cyber-teal/10 pt-6">
-              <p className="font-code text-xs text-cyber-muted">Sector Focus</p>
-              <p className="mt-1 font-display text-lg font-semibold tracking-wide text-cyber-orange">
-                {sectorFocus.name}
-              </p>
-            </div>
-          </FooterColumn>
+          <div className="lg:col-span-3 xl:col-span-2">
+            <FooterColumn heading="Frameworks">
+              <ul className="flex flex-wrap gap-2">
+                {footerFrameworkCodes.map((code) => (
+                  <li key={code} className="flex">
+                    <FrameworkChip variant="tag">{code}</FrameworkChip>
+                  </li>
+                ))}
+              </ul>
+              <div className="border-t border-cyber-teal/10 pt-6">
+                <p className="font-code text-xs text-cyber-muted">Sector Focus</p>
+                <p className="mt-1 font-display text-lg font-semibold tracking-wide text-cyber-orange">
+                  {sectorFocus.name}
+                </p>
+              </div>
+            </FooterColumn>
+          </div>
         </div>
 
         <Divider width="full" />

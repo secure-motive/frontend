@@ -2,15 +2,16 @@ import { cn } from '@/utils/helpers'
 
 interface LogoProps {
   /**
-   * 'header' (default) renders the full logo sized for navigation bars.
+   * 'header' (default) renders the logo sized for navigation bars.
    * 'footer' renders a larger full logo for footers and portal headers.
    */
   size?: 'header' | 'footer'
   /**
-   * 'full' (default): Complete multi-tier lockup with circuit X, sector icons & tagline.
+   * 'nav': Cropped brand lockup showing only SecureXmotive without sector icons & tagline (used for navbar).
+   * 'full': Complete multi-tier lockup with circuit X, sector icons & tagline.
    * 'mark': Standalone cyber circuit X emblem.
    */
-  variant?: 'full' | 'mark'
+  variant?: 'full' | 'mark' | 'nav'
   className?: string
 }
 
@@ -18,12 +19,14 @@ interface LogoProps {
  * Official SecureXmotive Logo component.
  *
  * Renders the official brand assets:
+ * - Nav Logo (`/logos/logo-nav.svg`): Cropped brand lockup with circuit X without sector icons & tagline.
  * - Full Logo (`/logos/logo.svg`): Complete multi-tier lockup with circuit X, sector icons & tagline.
  * - Mark (`/logos/logo-mark.svg`): Standalone cyber circuit X emblem.
  */
-export default function Logo({ size = 'header', variant = 'full', className }: LogoProps) {
+export default function Logo({ size = 'header', variant, className }: LogoProps) {
   const isFooter = size === 'footer'
   const isMark = variant === 'mark'
+  const resolvedVariant = variant ?? (isFooter ? 'full' : 'nav')
 
   if (isMark) {
     return (
@@ -37,13 +40,31 @@ export default function Logo({ size = 'header', variant = 'full', className }: L
     )
   }
 
+  if (resolvedVariant === 'nav') {
+    return (
+      <img
+        src="/logos/logo-nav.svg"
+        alt="SecureXmotive"
+        className={cn(
+          'w-auto object-contain transition-opacity duration-200 hover:opacity-90 select-none',
+          'h-8 sm:h-9.5',
+          className,
+        )}
+        width={1180}
+        height={255}
+        loading="eager"
+        decoding="async"
+      />
+    )
+  }
+
   return (
     <img
       src="/logos/logo.svg"
       alt="SecureXmotive — Cybersecurity Consulting Solutions"
       className={cn(
         'w-auto object-contain transition-opacity duration-200 hover:opacity-90 select-none',
-        isFooter ? 'h-18 sm:h-22' : 'h-11 sm:h-12',
+        isFooter ? 'h-24 sm:h-28 lg:h-32' : 'h-11 sm:h-12',
         className,
       )}
       width={1180}
@@ -53,3 +74,4 @@ export default function Logo({ size = 'header', variant = 'full', className }: L
     />
   )
 }
+

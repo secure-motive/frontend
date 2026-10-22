@@ -74,7 +74,7 @@ export function AdminSidebar({ onCloseMobile }: AdminSidebarProps) {
       {/* Brand header */}
       <div className="flex flex-col gap-2.5 border-b border-white/10 p-5">
         <div className="flex items-center justify-between">
-          <Logo size="header" />
+          <Logo size="header" variant="full" />
         </div>
         <div className="flex items-center gap-2">
           <span className="rounded bg-cyber-teal/15 px-2 py-0.5 font-code text-3xs font-semibold tracking-widest text-cyber-teal border border-cyber-teal/30 uppercase">

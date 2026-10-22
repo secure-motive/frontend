@@ -28,7 +28,7 @@ export default function Header({ menu }: HeaderProps) {
     <header className="fixed inset-x-0 top-0 z-50 border-b border-cyber-teal/10 bg-cyber-bg/95 backdrop-blur-[6px]">
       <Container className="flex h-16 items-center justify-between gap-4">
         <Link to={ROUTES.home} aria-label="SecureXmotive — home" className="shrink-0">
-          <Logo />
+          <Logo variant="nav" />
         </Link>
 
         <nav aria-label="Primary" className="hidden lg:block">
